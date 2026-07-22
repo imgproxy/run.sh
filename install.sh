@@ -145,9 +145,9 @@ install_local() {
   if [ -f "$project_root/run" ]; then
     local line
     # shellcheck disable=SC2016
-    line="$(grep '^TASK_DIR="\$TASK_ROOT/' "$project_root/run" | head -n1)" || true
+    line="$(grep '^TASK_DIR="\$PROJECT_ROOT/' "$project_root/run" | head -n1)" || true
     # shellcheck disable=SC2016
-    RUN_TASK_DIR_NAME="${line#*TASK_DIR=\"\$TASK_ROOT/}"
+    RUN_TASK_DIR_NAME="${line#*TASK_DIR=\"\$PROJECT_ROOT/}"
     RUN_TASK_DIR_NAME="${RUN_TASK_DIR_NAME%\"*}"
   fi
 

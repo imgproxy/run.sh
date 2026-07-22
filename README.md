@@ -63,6 +63,22 @@ main() {
 See `examples/` for zero-arg, positional-arg, flag-parsing, and
 task-composition patterns.
 
+## Variables and helpers
+
+`./run` sets a few variables and helpers before it calls your task's `main()`:
+
+- `PROJECT_ROOT` — absolute path to the project root (the directory containing `./run`).
+- `TASK_DIR` — absolute path to the task directory (e.g. `bin`).
+- `require_tool <cmd> <message>` — exit with a friendly error if `<cmd>` is not on `PATH`.
+- `depends_on <task>...` — run the named tasks in order and stop at the first failure.
+
+`.runrc` is sourced once before any task runs, so helpers defined there are also
+available to tasks:
+
+- `require_arg <flag-name> "$value"` — fail if a required flag value is missing.
+- `run_color_echo <color> <text>` — print colored text when the terminal supports it.
+- `NO_COLOR` — set this environment variable to disable color output.
+
 ## Dependencies
 
 Compose tasks with `depends_on` inside a task's `main()`:
@@ -86,7 +102,7 @@ For reusable helpers, source them from `.runrc`:
 
 ```sh
 # .runrc
-. "$TASK_ROOT/vendor/some-lib.sh"
+. "$PROJECT_ROOT/vendor/some-lib.sh"
 ```
 
 Use the built-in `require_tool` helper to fail early with a friendly message
