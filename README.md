@@ -9,7 +9,7 @@ no build step — just scripts.
 ## Install
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/imgproxy/run-sh/refs/heads/main/install.sh | bash -s -- -e
+curl -fsSL https://raw.githubusercontent.com/imgproxy/run.sh/refs/heads/main/install.sh | bash -s -- -e
 ```
 
 This sets up, in the current project:
@@ -31,7 +31,7 @@ folder for task files.
 ## Optional: global command
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/imgproxy/run-sh/refs/heads/main/install.sh | bash -s -- -e -g
+curl -fsSL https://raw.githubusercontent.com/imgproxy/run.sh/refs/heads/main/install.sh | bash -s -- -e -g
 ```
 
 Installs `run` to `~/.local/bin`, which walks up from your current directory
