@@ -247,8 +247,8 @@ install_local() {
   printf '\n\nNext: ./run\n'
 }
 
-RUN_INSTALL_EXAMPLES=0
-RUN_INSTALL_GLOBAL=0
+RUN_INSTALL_EXAMPLES=1
+RUN_INSTALL_GLOBAL=1
 
 while [ $# -gt 0 ]; do
   case "$1" in

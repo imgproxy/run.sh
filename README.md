@@ -58,7 +58,7 @@ main() {
 }
 ```
 
-Scaffold one with `./run new <name>`, or see `examples/` for zero-arg,
+Scaffold one with `./run new <name>`, or see `lib/examples/` for zero-arg,
 positional-arg, flag-parsing, and task-composition patterns.
 
 ## Philosophy
