@@ -18,14 +18,15 @@ This sets up, in the current project:
 - `.runrc` — shared helpers and terminal color helpers, sourced once before any task runs (yours to edit)
 - `bin/*.sh` — one file per task
 
-If `./bin` already exists, the installer will prompt you to choose a different
-folder for task files.
+If `./bin` already exists and is not empty, the installer skips creating it
+and skips scaffolding example tasks, writing a warning instead.
 
 ## Usage
 
 ```sh
 ./run              # list available tasks
 ./run <task> [args...]
+./run help <task>  # show a task's help text (when the help example task is installed)
 ```
 
 ## Optional: global command

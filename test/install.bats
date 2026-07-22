@@ -65,15 +65,16 @@ teardown() {
   ! grep -q "hand edit" run
 }
 
-@test "--examples scaffolds hello/greet/deploy when bin/ has no tasks yet" {
+@test "--examples scaffolds example tasks when bin/ is empty" {
   run bash "$RUN_ROOT/install.sh" --examples
   [ "$status" -eq 0 ]
   [ -f bin/hello.sh ]
   [ -f bin/greet.sh ]
   [ -f bin/deploy.sh ]
+  [ -f bin/help.sh ]
 }
 
-@test "--examples is skipped once a real task file already exists" {
+@test "--examples is skipped when bin/ already has task files" {
   bash "$RUN_ROOT/install.sh"
   cat > bin/existing.sh <<'EOF'
 #!/usr/bin/env bash
@@ -84,7 +85,29 @@ EOF
 
   run bash "$RUN_ROOT/install.sh" --examples
   [ "$status" -eq 0 ]
-  [[ "$output" == *"bin/ already has task files, skipping --examples"* ]]
+  [[ "$output" == *"bin/ is not empty, skipping creation and example tasks"* ]]
+  [ ! -f bin/hello.sh ]
+}
+
+@test "non-empty bin/ skips creation and examples with a warning" {
+  mkdir -p bin
+  touch bin/existing.txt
+
+  run bash "$RUN_ROOT/install.sh"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"bin/ is not empty, skipping creation and example tasks"* ]]
+  [ ! -f bin/hello.sh ]
+  [ -f run ]
+  [ -f .runrc ]
+}
+
+@test "non-empty bin/ with --examples still skips examples with a warning" {
+  mkdir -p bin
+  touch bin/existing.txt
+
+  run bash "$RUN_ROOT/install.sh" --examples
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"bin/ is not empty, skipping creation and example tasks"* ]]
   [ ! -f bin/hello.sh ]
 }
 

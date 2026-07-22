@@ -36,10 +36,28 @@ teardown() {
   [[ "$output" != *"  env "* ]]
 }
 
-@test "./run help <task> is now rejected as an unknown task" {
+@test "./run help <task> shows the task's help text" {
+  cp "$RUN_ROOT/lib/examples/help.sh" bin/help.sh
+
   run ./run help greet
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"Usage: ./run greet <name>"* ]]
+}
+
+@test "./run help with no task name errors" {
+  cp "$RUN_ROOT/lib/examples/help.sh" bin/help.sh
+
+  run ./run help
   [ "$status" -ne 0 ]
-  [[ "$output" == *"unknown task 'help'"* ]]
+  [[ "$output" == *"missing task name"* ]]
+}
+
+@test "./run help <unknown-task> errors" {
+  cp "$RUN_ROOT/lib/examples/help.sh" bin/help.sh
+
+  run ./run help bogus-task
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"unknown task 'bogus-task'"* ]]
 }
 
 @test "./run <task> <args> passes args through to main" {

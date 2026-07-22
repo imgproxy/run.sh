@@ -58,6 +58,7 @@ run_color_echo() {
 msg_ok()   { run_colors_enabled && printf '\033[32m[ok]\033[0m %s\n' "$1" || printf '[ok] %s\n' "$1"; }
 msg_skip() { run_colors_enabled && printf '\033[90m[skip]\033[0m %s\n' "$1" || printf '[skip] %s\n' "$1"; }
 msg_info() { run_colors_enabled && printf '\033[33m[info]\033[0m %s\n' "$1" || printf '[info] %s\n' "$1"; }
+msg_warn() { run_colors_enabled && printf '\033[33m[warn]\033[0m %s\n' "$1" || printf '[warn] %s\n' "$1"; }
 msg_err()  { printf 'error: %s\n' "$1" >&2; }
 
 # --- template fetching ------------------------------------------------------
@@ -91,66 +92,26 @@ render_global_run() {
 write_example_tasks() {
   local task_dir="$1"
   local name
-  for name in hello greet deploy build release; do
+  for name in hello greet deploy build release help; do
     fetch_template "examples/$name.sh" > "$task_dir/$name.sh"
   done
 }
 
-# --- installer flow --------------------------------------------------------
-
-prompt_task_dir_name() {
-  local project_root="$1"
-  local name
-  while :; do
-    printf './bin already exists. Enter a different folder for tasks: ' >&2
-    read -r name
-    [ -z "$name" ] && continue
-    case "$name" in
-      */*)
-        printf 'error: folder name cannot contain a path separator\n' >&2
-        continue
-        ;;
-      .*)
-        printf 'error: folder name cannot start with "."\n' >&2
-        continue
-        ;;
-      run)
-        printf 'error: "run" is reserved by the dispatcher script\n' >&2
-        continue
-        ;;
+task_dir_has_contents() {
+  local dir="$1" f
+  [ -e "$dir" ] || return 1
+  [ -d "$dir" ] || return 0
+  for f in "$dir"/.* "$dir"/*; do
+    [ -e "$f" ] || [ -L "$f" ] || continue
+    case "$f" in
+      "$dir/."|"$dir/..") continue ;;
     esac
-    if [ -e "$project_root/$name" ]; then
-      printf 'error: ./%s already exists\n' "$name" >&2
-      continue
-    fi
-    printf '%s\n' "$name"
-    return
+    return 0
   done
+  return 1
 }
 
-fallback_task_dir_name() {
-  local project_root="$1"
-  local name="tasks" i=1
-  while [ -e "$project_root/$name" ]; do
-    name="tasks-$i"
-    i=$((i + 1))
-  done
-  printf '%s\n' "$name"
-}
-
-choose_task_dir_name() {
-  local project_root="$1"
-  local default="bin"
-  if [ ! -e "$project_root/$default" ]; then
-    printf '%s\n' "$default"
-    return
-  fi
-  if [ -t 0 ]; then
-    prompt_task_dir_name "$project_root"
-  else
-    fallback_task_dir_name "$project_root"
-  fi
-}
+# --- installer flow --------------------------------------------------------
 
 install_global() {
   mkdir -p "$HOME/.local/bin"
@@ -180,8 +141,7 @@ install_local() {
   local project_root="$PWD"
 
   # On re-install, preserve the task directory already recorded in the
-  # existing dispatcher so we don't silently migrate tasks to a fallback
-  # folder (e.g., when ./bin exists and the script is non-interactive).
+  # existing dispatcher so we don't silently migrate tasks to a new folder.
   if [ -f "$project_root/run" ]; then
     local line
     # shellcheck disable=SC2016
@@ -192,12 +152,20 @@ install_local() {
   fi
 
   if [ -z "${RUN_TASK_DIR_NAME:-}" ]; then
-    RUN_TASK_DIR_NAME="$(choose_task_dir_name "$project_root")"
+    RUN_TASK_DIR_NAME="bin"
   fi
 
   local task_dir="$project_root/$RUN_TASK_DIR_NAME"
 
-  mkdir -p "$task_dir"
+  if task_dir_has_contents "$task_dir"; then
+    msg_warn "$RUN_TASK_DIR_NAME/ is not empty, skipping creation and example tasks"
+  else
+    mkdir -p "$task_dir"
+    if [ "$RUN_INSTALL_EXAMPLES" = "1" ]; then
+      write_example_tasks "$task_dir"
+      msg_ok "wrote example tasks: hello, greet, deploy, build, release, help"
+    fi
+  fi
 
   if [ -f "$project_root/.runrc" ]; then
     msg_skip ".runrc already exists, leaving it alone"
@@ -234,22 +202,6 @@ install_local() {
   fi
   rm -f "$tmp_new"
 
-  if [ "$RUN_INSTALL_EXAMPLES" = "1" ]; then
-    local has_tasks=0
-    local f name
-    for f in "$task_dir"/*.sh; do
-      [ -e "$f" ] || continue
-      has_tasks=1
-      break
-    done
-    if [ "$has_tasks" -eq 0 ]; then
-      write_example_tasks "$task_dir"
-      msg_ok "wrote example tasks: hello, greet, deploy, build, release"
-    else
-      msg_skip "$RUN_TASK_DIR_NAME/ already has task files, skipping --examples"
-    fi
-  fi
-
   printf '\n'
   run_color_echo neon "run.sh $RUN_VERSION installed"
   printf '\n\nNext: ./run\n'
@@ -265,7 +217,7 @@ while [ $# -gt 0 ]; do
     -h|--help)
       cat <<EOF
 Usage: install.sh [-e] [-g]
-  -e  scaffold hello/greet/deploy/build/release example tasks if the task dir has none yet
+  -e  scaffold hello/greet/deploy/build/release example tasks when the task dir is empty
   -g  also install the ~/.local/bin/run upward-search command
 EOF
       exit 0
