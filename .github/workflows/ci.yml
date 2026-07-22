@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install shellcheck and bats (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y shellcheck bats
+
+      - name: Install shellcheck and bats (macOS)
+        if: runner.os == 'macOS'
+        run: brew install shellcheck bats-core
+
+      - name: shellcheck
+        run: shellcheck install.sh global/install-global.sh examples/*.sh
+
+      - name: bats
+        run: bats test/

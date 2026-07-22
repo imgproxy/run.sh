@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <title>run.sh</title>
+  <meta name="description"
+    content="A Makefile replacement written in pure bash. No DSL, no dependencies, just scripts.">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <h1>run.sh</h1>
+  <p class="tagline">A Makefile replacement written in pure bash. No DSL, no dependencies, just scripts.</p>
+
+  <div class="install">
+    <code id="install-cmd">curl -fsSL https://raw.githubusercontent.com/imgproxy/run-sh/main/install.sh | bash</code>
+    <button class="copy-btn" onclick="copyInstall(this)">copy</button>
+  </div>
+
+  <ul class="points">
+    <li>No DSL to learn — it's bash, all the way down.</li>
+    <li>No runtime dependency, no build step, no framework.</li>
+    <li><code>run</code> is generated and regenerable; your task logic lives in <code>bin/</code>, which re-installing
+      never touches.</li>
+    <li>Project-wide helpers and variables go in <code>.runrc</code>.</li>
+    <li>Compose tasks with <code>depends_on task1 task2</code> instead of Make's recipe graph.</li>
+    <li>Optional <code>run</code> global command finds your project from any subdirectory, like <code>git</code> finds
+      <code>.git</code>.</li>
+  </ul>
+
+  <section>
+    <h2>A task looks like this</h2>
+    <pre class="snippet"><code>#!/usr/bin/env bash
+# bin/greet.sh — sourced by ./run, not executed directly.
+
+description() { echo "Greet someone"; }
+
+help() {
+  cat &lt;&lt;'EOF'
+Usage: ./run greet &lt;name&gt;
+EOF
+}
+
+main() {
+  echo "Hello, ${1:?name required}!"
+}</code></pre>
+  </section>
+
+  <section>
+    <h2>Usage</h2>
+    <pre class="snippet"><code>./run              # list available tasks
+./run help &lt;task&gt;  # show a task's usage
+./run &lt;task&gt; [args...]
+./run new &lt;task&gt;   # scaffold a new task file</code></pre>
+  </section>
+
+  <footer>
+    <a href="https://github.com/imgproxy/run-sh">github.com/imgproxy/run-sh</a> · MIT license
+  </footer>
+
+  <script>
+    function copyInstall(btn) {
+      var text = document.getElementById('install-cmd').textContent;
+      navigator.clipboard.writeText(text).then(function () {
+        var original = btn.textContent;
+        btn.textContent = 'copied';
+        setTimeout(function () { btn.textContent = original; }, 1500);
+      });
+    }
+  </script>
+
+</body>
+
+</html>
