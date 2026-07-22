@@ -1,3 +1,6 @@
+> [!CAUTION]
+> This is work in progress, use on your own risk.
+
 # run.sh
 
 A Makefile replacement written in pure bash. No DSL, no runtime dependencies,
@@ -6,7 +9,7 @@ no build step — just scripts.
 ## Install
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/imgproxy/run-sh/main/install.sh | bash -e
+curl -fsSL https://raw.githubusercontent.com/imgproxy/run-sh/refs/heads/main/install.sh | bash -s -- -e
 ```
 
 This sets up, in the current project:
@@ -22,15 +25,13 @@ folder for task files.
 
 ```sh
 ./run              # list available tasks
-./run help <task>  # show a task's usage
 ./run <task> [args...]
-./run new <task>   # scaffold a new task file
 ```
 
 ## Optional: global command
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/imgproxy/run-sh/main/install.sh | bash -s -- -g
+curl -fsSL https://raw.githubusercontent.com/imgproxy/run-sh/refs/heads/main/install.sh | bash -s -- -e -g
 ```
 
 Installs `run` to `~/.local/bin`, which walks up from your current directory
@@ -58,8 +59,44 @@ main() {
 }
 ```
 
-Scaffold one with `./run new <name>`, or see `examples/` for zero-arg,
-positional-arg, flag-parsing, and task-composition patterns.
+See `examples/` for zero-arg, positional-arg, flag-parsing, and
+task-composition patterns.
+
+## Dependencies
+
+Compose tasks with `depends_on` inside a task's `main()`:
+
+```sh
+main() {
+  depends_on build test
+  echo "deploying..."
+}
+```
+
+`depends_on` runs each named task in order and stops at the first failure.
+
+## External libraries
+
+run.sh itself has no runtime dependencies, but your tasks can use any tool you
+already have installed. Install libraries the same way you normally would
+(Homebrew, apt, npm, pip, etc.) and call them from your task files.
+
+For reusable helpers, source them from `.runrc`:
+
+```sh
+# .runrc
+. "$TASK_ROOT/vendor/some-lib.sh"
+```
+
+Use the built-in `require_tool` helper to fail early with a friendly message
+when a required command is missing:
+
+```sh
+main() {
+  require_tool jq "jq is required (https://jqlang.github.io/jq/)"
+  jq '.version' package.json
+}
+```
 
 ## Philosophy
 

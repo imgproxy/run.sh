@@ -20,7 +20,7 @@
 
   <div class="install">
     <code
-      id="install-cmd">curl -fsSL https://raw.githubusercontent.com/imgproxy/run-sh/main/install.sh | bash -e -g</code>
+      id="install-cmd">curl -fsSL https://raw.githubusercontent.com/imgproxy/run-sh/refs/heads/main/install.sh | bash -s -- -e -g</code>
     <button class="copy-btn" onclick="copyInstall(this)">copy</button>
   </div>
 
@@ -57,9 +57,26 @@ main() {
   <section>
     <h2>Usage</h2>
     <pre class="snippet"><code>./run              # list available tasks
-./run help &lt;task&gt;  # show a task's usage
-./run &lt;task&gt; [args...]
-./run new &lt;task&gt;   # scaffold a new task file</code></pre>
+./run &lt;task&gt; [args...]</code></pre>
+  </section>
+
+  <section>
+    <h2>Dependencies</h2>
+    <p>
+      Compose tasks with <code>depends_on</code> inside a task's <code>main()</code>.
+      It runs each named task in order and stops at the first failure.
+    </p>
+    <pre class="snippet"><code>main() {
+  depends_on build test
+  echo "deploying..."
+}</code></pre>
+  </section>
+
+  <section>
+    <p>
+      Want to know more? Check the documentation at:
+      <a href="https://github.com/imgproxy/run-sh">github.com/imgproxy/run-sh</a>
+    </p>
   </section>
 
   <footer>

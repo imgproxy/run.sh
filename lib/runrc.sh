@@ -12,7 +12,7 @@ require_arg() {
   fi
 }
 
-# --- terminal color/gradient helpers (used by ./run and available to tasks) ---
+# --- terminal color helpers (used by ./run and available to tasks) ---
 
 run_colors_enabled() {
   [ -n "${NO_COLOR:-}" ] && return 1
@@ -22,26 +22,34 @@ run_colors_enabled() {
   [ "$n" -ge 8 ] 2>/dev/null
 }
 
-run_gradient_text() {
-  local text="$1"
+run_color_echo() {
+  local color="$1" text="$2"
   if ! run_colors_enabled; then
     printf '%s' "$text"
     return
   fi
   local ncolors
   ncolors="$(tput colors 2>/dev/null || echo 0)"
-  if [ "$ncolors" -lt 256 ]; then
-    printf '%s%s%s' "$(tput bold)" "$text" "$(tput sgr0)"
-    return
+  if [ "$ncolors" -ge 256 ]; then
+    case "$color" in
+      red)     printf '\033[38;5;196m%s' "$text" ;;
+      green)   printf '\033[38;5;34m%s'  "$text" ;;
+      blue)    printf '\033[38;5;21m%s'  "$text" ;;
+      cyan)    printf '\033[38;5;45m%s'  "$text" ;;
+      magenta) printf '\033[38;5;201m%s' "$text" ;;
+      neon)    printf '\033[38;5;82m%s'  "$text" ;;
+      *)       printf '%s' "$text" ;;
+    esac
+  else
+    case "$color" in
+      red)     printf '\033[31m%s'  "$text" ;;
+      green)   printf '\033[32m%s'  "$text" ;;
+      blue)    printf '\033[34m%s'  "$text" ;;
+      cyan)    printf '\033[36m%s'  "$text" ;;
+      magenta) printf '\033[35m%s'  "$text" ;;
+      neon)    printf '\033[1;32m%s' "$text" ;;
+      *)       printf '%s' "$text" ;;
+    esac
   fi
-  local i=0 len=${#text} start=63 end=201
-  local span=$((end - start))
-  while [ "$i" -lt "$len" ]; do
-    local ch="${text:$i:1}"
-    local denom=$((len > 1 ? len - 1 : 1))
-    local color=$((start + (span * i) / denom))
-    printf '\033[38;5;%sm%s' "$color" "$ch"
-    i=$((i + 1))
-  done
   printf '%s' "$(tput sgr0)"
 }

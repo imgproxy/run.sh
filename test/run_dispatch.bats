@@ -36,11 +36,10 @@ teardown() {
   [[ "$output" != *"  env "* ]]
 }
 
-@test "./run help <task> prints description and help" {
+@test "./run help <task> is now rejected as an unknown task" {
   run ./run help greet
-  [ "$status" -eq 0 ]
-  [[ "$output" == *"Greet a name"* ]]
-  [[ "$output" == *"Usage: ./run greet <name>"* ]]
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"unknown task 'help'"* ]]
 }
 
 @test "./run <task> <args> passes args through to main" {

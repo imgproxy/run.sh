@@ -41,7 +41,7 @@ teardown() {
   run bash "$RUN_ROOT/install.sh"
   [ "$status" -eq 0 ]
   grep -q "run_colors_enabled" .runrc
-  grep -q "run_gradient_text" .runrc
+  grep -q "run_color_echo" .runrc
   [[ "$(grep -c "guard_docker" .runrc || true)" == "0" ]]
 }
 

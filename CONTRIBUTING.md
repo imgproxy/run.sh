@@ -27,18 +27,11 @@ never exercises the gradient/color code paths):
 mkdir -p /tmp/run-smoke && cd /tmp/run-smoke
 bash /path/to/run-sh/install.sh --examples
 ./run
-./run new hello
 ./run hello
-./run help hello
 ```
 
 ## Design notes
 
-- `install.sh` and `global/install-global.sh` are meant to be curl-piped
-  standalone, so all generated file content (the `run` dispatcher,
-  `.runrc`, `colors.sh`, the `run new` boilerplate, the global `run`
-  script) is embedded as heredocs directly in these two files — there is
-  no `templates/` directory to keep in sync.
 - Target bash is 3.2 (stock macOS) — avoid associative arrays, `${var,,}`,
   `mapfile`, and other bash-4+ features.
 - `render_run_file` writes its heredoc straight to a temp file rather than
