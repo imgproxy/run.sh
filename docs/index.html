@@ -19,7 +19,8 @@
   <p class="tagline">A Makefile replacement written in pure bash. No DSL, no dependencies, just scripts.</p>
 
   <div class="install">
-    <code id="install-cmd">curl -fsSL https://raw.githubusercontent.com/imgproxy/run-sh/main/install.sh | bash</code>
+    <code
+      id="install-cmd">curl -fsSL https://raw.githubusercontent.com/imgproxy/run-sh/main/install.sh | bash -e -g</code>
     <button class="copy-btn" onclick="copyInstall(this)">copy</button>
   </div>
 
@@ -31,7 +32,8 @@
     <li>Project-wide helpers and variables go in <code>.runrc</code>.</li>
     <li>Compose tasks with <code>depends_on task1 task2</code> instead of Make's recipe graph.</li>
     <li>Optional <code>run</code> global command finds your project from any subdirectory, like <code>git</code> finds
-      <code>.git</code>.</li>
+      <code>.git</code>.
+    </li>
   </ul>
 
   <section>

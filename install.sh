@@ -3,8 +3,8 @@
 #
 # Usage:
 #   curl -fsSL https://raw.githubusercontent.com/imgproxy/run-sh/main/install.sh | bash
-#   curl -fsSL https://raw.githubusercontent.com/imgproxy/run-sh/main/install.sh | bash -s -- --global
-#   curl -fsSL https://raw.githubusercontent.com/imgproxy/run-sh/main/install.sh | bash -s -- --examples
+#   curl -fsSL https://raw.githubusercontent.com/imgproxy/run-sh/main/install.sh | bash -s -- -g
+#   curl -fsSL https://raw.githubusercontent.com/imgproxy/run-sh/main/install.sh | bash -s -- -e
 #
 # For local development/testing, set RUN_SH_ROOT to the repo root so templates
 # are read from disk instead of curled from GitHub.
@@ -247,18 +247,18 @@ install_local() {
   printf '\n\nNext: ./run\n'
 }
 
-RUN_INSTALL_EXAMPLES=1
-RUN_INSTALL_GLOBAL=1
+RUN_INSTALL_EXAMPLES=0
+RUN_INSTALL_GLOBAL=0
 
 while [ $# -gt 0 ]; do
   case "$1" in
-    --examples) RUN_INSTALL_EXAMPLES=1; shift ;;
-    --global) RUN_INSTALL_GLOBAL=1; shift ;;
+    -e) RUN_INSTALL_EXAMPLES=1; shift ;;
+    -g) RUN_INSTALL_GLOBAL=1; shift ;;
     -h|--help)
       cat <<EOF
-Usage: install.sh [--examples] [--global]
-  --examples  scaffold hello/greet/deploy/build/release example tasks if the task dir has none yet
-  --global    also install the ~/.local/bin/run upward-search command
+Usage: install.sh [-e] [-g]
+  -e  scaffold hello/greet/deploy/build/release example tasks if the task dir has none yet
+  -g  also install the ~/.local/bin/run upward-search command
 EOF
       exit 0
       ;;

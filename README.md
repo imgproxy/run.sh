@@ -6,7 +6,7 @@ no build step — just scripts.
 ## Install
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/imgproxy/run-sh/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/imgproxy/run-sh/main/install.sh | bash -e
 ```
 
 This sets up, in the current project:
@@ -30,7 +30,7 @@ folder for task files.
 ## Optional: global command
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/imgproxy/run-sh/main/install.sh | bash -s -- --global
+curl -fsSL https://raw.githubusercontent.com/imgproxy/run-sh/main/install.sh | bash -s -- -g
 ```
 
 Installs `run` to `~/.local/bin`, which walks up from your current directory
@@ -58,7 +58,7 @@ main() {
 }
 ```
 
-Scaffold one with `./run new <name>`, or see `lib/examples/` for zero-arg,
+Scaffold one with `./run new <name>`, or see `examples/` for zero-arg,
 positional-arg, flag-parsing, and task-composition patterns.
 
 ## Philosophy
