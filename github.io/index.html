@@ -16,7 +16,7 @@
 <body>
 
   <h1>run.sh</h1>
-  <p class="tagline">A Makefile replacement written in pure bash. No DSL, no dependencies, just scripts.</p>
+  <p class="tagline">A Makefile replacement written in pure bash.</p>
 
   <div class="install">
     <code
@@ -25,14 +25,14 @@
   </div>
 
   <ul class="points">
-    <li>No DSL to learn — it's bash, all the way down.</li>
+    <li>It's bash, all the way down.</li>
     <li>No runtime dependency, no build step, no framework.</li>
-    <li><code>run</code> is a single file you download once and keep; your task logic lives in <code>bin/</code>, entirely
-      yours to edit.</li>
+    <li><code>run</code> is a single file you download once and keep; your task logic lives in <code>bin/</code>,
+      entirely yours to edit.</li>
     <li>Project-wide helpers and variables go in <code>.runrc</code> (optional).</li>
-    <li>Compose tasks with <code>depends_on task1 task2</code> instead of Make's recipe graph.</li>
-    <li>Optional <code>./run install-global</code> adds a shell function that finds your project from any
-      subdirectory, like <code>git</code> finds <code>.git</code>.
+    <li>Compose tasks with <code>depends_on task1 task2</code>.</li>
+    <li>Optional <code>./run install-global</code> adds a shell function that finds your project <code>run</code> in the
+      parent subdirectory.</li>
     </li>
   </ul>
 
@@ -70,13 +70,6 @@ main() {
   depends_on build test
   echo "deploying..."
 }</code></pre>
-  </section>
-
-  <section>
-    <p>
-      Want to know more? Check the documentation at:
-      <a href="https://github.com/imgproxy/run.sh">github.com/imgproxy/run.sh</a>
-    </p>
   </section>
 
   <footer>

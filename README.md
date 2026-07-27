@@ -120,11 +120,9 @@ main() {
 
 ## Philosophy
 
-- No DSL to learn — it's bash, all the way down.
-- No runtime dependency, no build step, no framework.
+- No external dependencies — it's bash, all the way down.
 - `run` is a single file you download once and keep; your logic lives in `bin/` and
-  (optionally) `.runrc`, entirely yours to edit.
-- Compose tasks with `depends_on task1 task2` in a task's `main()`.
+  (optionally) `.runrc`.
 
 ## License
 
