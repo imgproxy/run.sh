@@ -79,7 +79,7 @@ EOF
 
 @test "global run reports a clean error when no project is found" {
   mkdir -p "$FAKE_HOME/empty-dir"
-  HOME="$FAKE_HOME" SHELL=/bin/bash "$FAKE_ROOT/run" install-global >/dev/null 2>&1 || true
+  HOME="$FAKE_HOME" SHELL=/bin/bash "$RUN_ROOT/run" install-global >/dev/null 2>&1 || true
 
   run bash -c "HOME='$FAKE_HOME' SHELL=/bin/bash; source '$FAKE_HOME/.bashrc' 2>/dev/null; cd '$FAKE_HOME/empty-dir' && run 2>&1"
   [ "$status" -ne 0 ]
@@ -92,7 +92,7 @@ EOF
   chmod +x "$FAKE_HOME/run" "$FAKE_ROOT/run"
   mkdir -p "$FAKE_HOME/no-project-subdir"
 
-  HOME="$FAKE_HOME" SHELL=/bin/bash "$FAKE_HOME/run" install-global >/dev/null 2>&1 || true
+  HOME="$FAKE_HOME" SHELL=/bin/bash "$RUN_ROOT/run" install-global >/dev/null 2>&1 || true
 
   run bash -c "HOME='$FAKE_HOME' SHELL=/bin/bash; source '$FAKE_HOME/.bashrc' 2>/dev/null; cd '$FAKE_HOME/no-project-subdir' && run 2>&1"
   [ "$status" -ne 0 ]
