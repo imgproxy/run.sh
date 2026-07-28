@@ -41,15 +41,15 @@
     <pre class="snippet"><code>#!/usr/bin/env bash
 # bin/greet.sh — sourced by ./run, not executed directly.
 
-description() { echo "Greet someone"; }
+<span class="fn">description</span>() { echo "Greet someone"; }
 
-help() {
+<span class="fn">help</span>() {
   cat &lt;&lt;'EOF'
 Usage: ./run greet &lt;name&gt;
 EOF
 }
 
-main() {
+<span class="fn">main</span>() {
   echo "Hello, ${1:?name required}!"
 }</code></pre>
   </section>
@@ -82,17 +82,20 @@ main() {
     <p>
       Built-in helpers available in all tasks:
     </p>
-    <pre class="snippet"><code>require_tool docker "docker is required"
-require_arg --env "$env"
-depends_on build test
+    <pre class="snippet"><code><span class="fn">require_tool</span> docker "docker is required"
+<span class="fn">require_arg</span> --env "$env"
+<span class="fn">depends_on</span> build test
 
 # Interactive input
-if prompt "Deploy to production?"; then
-  env=$(user_input "Environment")
+if <span class="fn">prompt</span> "Deploy to production?" "y/N"; then
+  env=$(<span class="fn">user_input</span> "Environment")
   echo "Deploying to $env..."
 fi</code></pre>
     <p>
-      Other helpers: <code>require_tool</code>, <code>require_arg</code>, <code>run_color_echo</code>, <code>NO_COLOR</code> env var.
+      <code>prompt</code> takes an optional choices string (default <code>y/n</code>) and resolves on a
+      single keypress — no Enter needed. Capitalize a letter to make it the default, selected by
+      pressing Enter. <code>user_input</code> reads a free-form value. Other helpers:
+      <code>require_tool</code>, <code>require_arg</code>, <code>run_color_echo</code>, <code>NO_COLOR</code> env var.
     </p>
   </section>
 

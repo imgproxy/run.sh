@@ -14,12 +14,12 @@ EOF
 
 main() {
   if prompt "Do you want to continue?"; then
-    name=$(user_input "Enter your name")
-    age=$(user_input "Enter your age")
+    name=$(user_input "Enter your name: ")
+    age=$(user_input "Enter your age: ")
 
     echo "Hello, $name! You are $age years old."
 
-    if prompt "Save this information?"; then
+    if prompt "Save this information?" "y/N"; then
       echo "Information saved."
     else
       echo "Cancelled."

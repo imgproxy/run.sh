@@ -40,14 +40,28 @@ require_arg() {
 }
 
 prompt() {
-  local question="$1" reply
-  run_color_echo cyan "$question"
-  printf ' (y/n) '
-  read -r reply
-  case "$reply" in
-    [yY]*) return 0 ;;
-    *) return 1 ;;
-  esac
+  local question="$1" choices="${2:-y/n}" reply default="" o lower first
+  local -a opts
+  IFS='/' read -ra opts <<< "$choices"
+  first="$(printf '%s' "${opts[0]}" | tr '[:upper:]' '[:lower:]')"
+  for o in "${opts[@]}"; do
+    [[ "$o" =~ ^[A-Z] ]] && default="$(printf '%s' "$o" | tr '[:upper:]' '[:lower:]')"
+  done
+  run_color_echo cyan "$question" >&2
+  printf ' (%s) ' "$choices" >&2
+  # Single keypress, no Enter needed (matched against opts by prefix below).
+  IFS= read -rsn 1 reply || reply=""
+  printf '%s\n' "$reply" >&2
+  reply="${reply:-$default}"
+  reply="$(printf '%s' "$reply" | tr '[:upper:]' '[:lower:]')"
+  for o in "${opts[@]}"; do
+    lower="$(printf '%s' "$o" | tr '[:upper:]' '[:lower:]')"
+    if [ -n "$reply" ] && [[ "$reply" == "$lower"* ]]; then
+      printf '%s\n' "$lower"
+      [ "$lower" = "$first" ] && return 0 || return 1
+    fi
+  done
+  return 1
 }
 
 user_input() {
@@ -225,9 +239,10 @@ cmd_install_global() {
   local marker_end="# <<< run.sh install-global <<<"
 
   if [ $force -eq 0 ] && [ -f "$rc_file" ] && grep -qF "$marker_begin" "$rc_file" 2>/dev/null; then
-    if prompt "run function already installed in $rc_file. Override?"; then
+    if prompt "run function already installed in $rc_file. Override?" "y/N" >/dev/null; then
       force=1
     else
+      msg_skip "run() function already installed in $rc_file"
       return 0
     fi
   fi

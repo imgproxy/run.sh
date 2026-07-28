@@ -74,7 +74,7 @@ trim it down to what you need.
 - `TASK_DIR` — absolute path to the task directory (`$PROJECT_ROOT/bin`).
 - `require_tool <cmd> <message>` — exit with a friendly error if `<cmd>` is not on `PATH`.
 - `require_arg <flag-name> "$value"` — fail if a required flag value is missing.
-- `prompt <question>` — print a colored yes/no question and wait for input; returns 0 for yes, 1 for no.
+- `prompt <question> [choices]` — print a colored question with `choices` (default `y/n`) and wait for a single keypress (no Enter needed); prints the chosen letter and returns 0 on a match, 1 otherwise. Capitalize one letter to make it the default, selected by pressing Enter, e.g. `prompt "Deploy?" "y/N"`.
 - `user_input <label>` — print a colored label and wait for user input; outputs the input value.
 - `depends_on <task>...` — run the named tasks in order and stop at the first failure.
 - `run_color_echo <color> <text>` — print colored text (when the terminal supports it).

@@ -141,6 +141,10 @@ pre.snippet {
   font-size: 0.88rem;
 }
 
+pre.snippet .fn {
+  color: var(--muted);
+}
+
 footer {
   margin-top: 3rem;
   color: var(--muted);
