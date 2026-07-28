@@ -30,7 +30,7 @@
     <li><code>run</code> is a single file you download once and keep; your task logic lives in <code>bin/</code>,
       entirely yours to edit.</li>
     <li>Project-wide helpers and variables go in <code>.runrc</code> (optional).</li>
-    <li>Compose tasks with <code>depends_on task1 task2</code>.</li>
+    <li>Compose tasks with <code>run::depends_on task1 task2</code>.</li>
     <li>Optional <code>./run install-global</code> adds a shell function that finds your project <code>run</code> in the
       parent subdirectory.</li>
     </li>
@@ -68,11 +68,11 @@ EOF
   <section>
     <h2>Dependencies</h2>
     <p>
-      Compose tasks with <code>depends_on</code> inside a task's <code>main()</code>.
+      Compose tasks with <code>run::depends_on</code> inside a task's <code>main()</code>.
       It runs each named task in order and stops at the first failure.
     </p>
     <pre class="snippet"><code>main() {
-  depends_on build test
+  run::depends_on build test
   echo "deploying..."
 }</code></pre>
   </section>
@@ -82,20 +82,23 @@ EOF
     <p>
       Built-in helpers available in all tasks:
     </p>
-    <pre class="snippet"><code><span class="fn">require_tool</span> docker "docker is required"
-<span class="fn">require_arg</span> --env "$env"
-<span class="fn">depends_on</span> build test
+    <pre class="snippet"><code><span class="fn">run::require_tool</span> docker "docker is required"
+<span class="fn">run::require_arg</span> --env "$env"
+<span class="fn">run::depends_on</span> build test
 
 # Interactive input
-if <span class="fn">prompt</span> "Deploy to production?" "y/N"; then
-  env=$(<span class="fn">user_input</span> "Environment")
+if <span class="fn">run::prompt</span> cyan "Deploy to production?" "y/N"; then
+  env=$(<span class="fn">run::user_input</span> cyan "Environment")
   echo "Deploying to $env..."
 fi</code></pre>
     <p>
-      <code>prompt</code> takes an optional choices string (default <code>y/n</code>) and resolves on a
-      single keypress — no Enter needed. Capitalize a letter to make it the default, selected by
-      pressing Enter. <code>user_input</code> reads a free-form value. Other helpers:
-      <code>require_tool</code>, <code>require_arg</code>, <code>run_color_echo</code>, <code>NO_COLOR</code> env var.
+      <code>run::prompt</code> takes a color, a question, and an optional choices string (default
+      <code>y/n</code>), and resolves on a single keypress — no Enter needed. Capitalize a letter to make it the default, selected by
+      pressing Enter. <code>run::user_input</code> reads a free-form value. Other helpers:
+      <code>run::require_tool</code>, <code>run::require_arg</code>, <code>run::color_echo</code>, <code>NO_COLOR</code> env var,
+      <code>run::icon</code> (skip/success/error/info/warning glyphs: ◇ ✓ ✕ ◆ ■), and
+      <code>run::msg_ok</code>/<code>run::msg_skip</code>/<code>run::msg_info</code>/<code>run::msg_warn</code>/<code>run::msg_err</code> for
+      ready-made colored status lines built on top of <code>run::icon</code>.
     </p>
   </section>
 

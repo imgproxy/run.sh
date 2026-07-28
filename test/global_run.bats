@@ -35,7 +35,7 @@ teardown() {
   [ "$status" -eq 0 ]
   [[ "$output" == *"detected shell: bash"* ]]
   [[ "$output" == *"target rc file:"* ]]
-  [[ "$output" == *"[ok] wrote run() function"* ]]
+  [[ "$output" == *"✓ wrote run() function"* ]]
 }
 
 @test "install-global is idempotent (second run skips)" {
@@ -47,7 +47,7 @@ teardown() {
   HOME="$FAKE_HOME" SHELL=/bin/bash ./run install-global >/dev/null
   run env HOME="$FAKE_HOME" SHELL=/bin/bash ./run install-global
   [ "$status" -eq 0 ]
-  [[ "$output" == *"[skip]"* ]]
+  [[ "$output" == *"◇"* ]]
   [[ "$output" == *"already installed"* ]]
 
   # Verify marker appears exactly once

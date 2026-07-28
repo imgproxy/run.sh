@@ -22,7 +22,7 @@ main() {
   while [ $# -gt 0 ]; do
     case "$1" in
       --env=*) env="${1#*=}"; shift ;;
-      --env) require_arg --env "${2:-}"; env="$2"; shift 2 ;;
+      --env) run::require_arg --env "${2:-}"; env="$2"; shift 2 ;;
       --dry-run) dry_run=1; shift ;;
       --) shift; break ;;
       -*) echo "error: unknown flag $1" >&2; return 1 ;;
@@ -45,10 +45,10 @@ main() {
   esac
 
   # Optionally require a tool (uncomment if needed).
-  # require_tool docker "docker is required (https://docker.com)"
+  # run::require_tool docker "docker is required (https://docker.com)"
 
   # Optionally depend on other tasks (uncomment if needed).
-  # depends_on build test
+  # run::depends_on build test
 
   # Execute.
   if [ "$dry_run" -eq 1 ]; then

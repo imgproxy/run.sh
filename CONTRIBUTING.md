@@ -44,6 +44,6 @@ mkdir bin && cp /path/to/run-sh/examples/task.sh bin/task.sh
   the heredoc body for paren balance even though the delimiter is quoted,
   and throws a spurious syntax error. Instead, write directly to a file via
   `cat <<'EOF' >> file` (direct redirect, no capture). This is the pattern
-  used in `cmd_install_global`; keep it in mind if you add more heredocs.
+  used in `run::_cmd_install_global`; keep it in mind if you add more heredocs.
 - `.runrc` sits at the project root, separate from task files in `bin/`, so
   the task-listing glob and task dispatch never need to skip an env file.
