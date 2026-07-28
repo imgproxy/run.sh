@@ -90,20 +90,23 @@ EOF
 if <span class="fn">run::prompt</span> cyan "Deploy to production?" "y/N"; then
   env=$(<span class="fn">run::user_input</span> cyan "Environment")
   echo "Deploying to $env..."
-fi</code></pre>
-    <p>
-      <code>run::prompt</code> takes a color, a question, and an optional choices string (default
-      <code>y/n</code>), and resolves on a single keypress — no Enter needed. Capitalize a letter to make it the default, selected by
-      pressing Enter. <code>run::user_input</code> reads a free-form value. Other helpers:
-      <code>run::require_tool</code>, <code>run::require_arg</code>, <code>run::color_echo</code>, <code>NO_COLOR</code> env var,
-      <code>run::icon</code> (skip/success/error/info/warning glyphs: ◇ ✓ ✕ ◆ ■), and
-      <code>run::msg_ok</code>/<code>run::msg_skip</code>/<code>run::msg_info</code>/<code>run::msg_warn</code>/<code>run::msg_err</code> for
-      ready-made colored status lines built on top of <code>run::icon</code>.
-    </p>
+fi
+
+# Colored status lines
+<span class="fn">run::require_tool</span> jq "jq is required" &amp;&amp; <span class="fn">run::msg_ok</span> "jq found"
+[ -f dist/app ] &amp;&amp; <span class="fn">run::msg_skip</span> "already built" || <span class="fn">run::msg_info</span> "building..."
+<span class="fn">run::msg_warn</span> "cache is stale"
+<span class="fn">run::msg_err</span> "something went wrong"
+
+# Raw color and icon access
+<span class="fn">run::color_echo</span> green "OK"; printf '\n'
+printf '%s done\n' "$(<span class="fn">run::icon</span> success)"
+
+NO_COLOR=1 ./run deploy   # disable all color output</code></pre>
   </section>
 
   <footer>
-    <a href="https://github.com/imgproxy/run.sh">github.com/imgproxy/run.sh</a> · MIT license
+    Docs: <a href="https://github.com/imgproxy/run.sh">github.com/imgproxy/run.sh</a> · MIT license
   </footer>
 
   <script>
