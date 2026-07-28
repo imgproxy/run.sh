@@ -145,7 +145,6 @@ directly.
   ```sh
   run::prompt cyan "Deploy to production?" "y/N" && deploy   # default: no
   if run::prompt cyan "Overwrite existing file?" "Y/n"; then ...; fi
-  choice="$(run::prompt magenta "Pick one" "staging/production")"
   ```
 
 - **`run::user_input <color> <label>`** — prints `<label>` in `<color>` and
