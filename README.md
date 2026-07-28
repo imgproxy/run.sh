@@ -139,10 +139,15 @@ directly.
   - `choices` is a `/`-separated list of single letters, default `"y/n"`.
     Capitalize one letter to make it the default (picked by pressing Enter).
   - An unmatched key is ignored — no error, just waits for another keypress.
-  - Returns 0 if the match is the first-listed choice, 1 otherwise — so
-    `run::prompt cyan "..." "y/N" && do_thing` reads as "if yes, do the thing."
-  - Tasks run under `set -e`; for 3+-way choices, guard the capture with
-    `|| true` so a non-default pick doesn't abort the task.
+  - **2-way choices (`y/n`-style):** the exit code doubles as the answer —
+    0 if the match is the first-listed choice, 1 otherwise. That's what lets
+    `run::prompt cyan "..." "y/N" && do_thing` read as "if yes, do the thing,"
+    with no need to capture or compare stdout.
+  - **3+-way choices:** the exit code still follows the same rule (0 only for
+    the first-listed choice) but isn't meaningful here — you have three-plus
+    outcomes to distinguish, not two. Capture stdout and switch on it instead.
+    Tasks run under `set -e`, so guard the capture with `|| true`; otherwise a
+    non-first pick returns 1 and aborts the task before the `case` runs.
 
   ```sh
   run::prompt cyan "Deploy to production?" "y/N" && deploy   # default: no
