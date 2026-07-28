@@ -116,11 +116,15 @@ cmd_list() {
     printf '    description() { echo "One-line summary"; }\n'
     printf '    help() { echo "Usage: ./run <name> [args...]"; }\n'
     printf '    main() { echo "task logic goes here, receives \\"$@\\""; }\n\n'
-    printf '  Or copy a starting point from https://github.com/imgproxy/run.sh/blob/main/examples/task.sh\n'
+    printf '  Or copy a starting point from https://github.com/imgproxy/run.sh/blob/main/examples/task.sh\n\n'
+    printf '  Optionally, create a .runrc file at the project root to define shared\n'
+    printf '  functions and variables for your tasks.\n'
+  else
+    printf '\n'
+    run_color_echo neon "  help"
+    printf ' — show a task'"'"'s help text\n'
   fi
   printf '\n'
-  run_color_echo neon "  help"
-  printf ' — show a task'"'"'s help text\n'
   run_color_echo neon "  install-global"
   # shellcheck disable=SC2016
   printf ' — add a global `run` shell function to your shell rc\n'
