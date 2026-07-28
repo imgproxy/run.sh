@@ -133,18 +133,27 @@ directly.
 
 ### User interaction
 
-- **`run::prompt <color> <question> [choices]`** — prints `<question>` in
-  `<color>` (any color `run::color_echo` accepts), waits for a single
-  keypress (no Enter required), and echoes the matched choice to stdout.
-  `choices` is a `/`-separated list, default `"y/n"`. Capitalize exactly
-  one letter to make it the default, selected by pressing Enter with no
-  other input. Returns 0 if the matched choice is the first one listed, 1
-  otherwise — so `run::prompt cyan "..." "y/N" && do_thing` reads
-  naturally as "if yes, do the thing."
+- **`run::prompt <color> <question> [choices]`** — single-keypress prompt.
+  Prints `<question>` in `<color>`, waits for one key (no Enter needed),
+  and echoes the matched choice to stdout.
+  - `choices` is a `/`-separated list of single letters, default `"y/n"`.
+    Capitalize one letter to make it the default (picked by pressing Enter).
+  - An unmatched key is ignored — no error, just waits for another keypress.
+  - Returns 0 if the match is the first-listed choice, 1 otherwise — so
+    `run::prompt cyan "..." "y/N" && do_thing` reads as "if yes, do the thing."
+  - Tasks run under `set -e`; for 3+-way choices, guard the capture with
+    `|| true` so a non-default pick doesn't abort the task.
 
   ```sh
   run::prompt cyan "Deploy to production?" "y/N" && deploy   # default: no
   if run::prompt cyan "Overwrite existing file?" "Y/n"; then ...; fi
+
+  choice="$(run::prompt magenta "Deploy to: (s)taging/(p)roduction/(c)anary" "s/p/c")" || true
+  case "$choice" in
+    s) ... ;;
+    p) ... ;;
+    c) ... ;;
+  esac
   ```
 
 - **`run::user_input <color> <label>`** — prints `<label>` in `<color>` and

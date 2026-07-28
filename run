@@ -72,20 +72,24 @@ run::require_arg() {
 }
 
 # run::prompt <color> <question> [choices]
-#   Print <question> in <color> (any color run::color_echo accepts), wait
-#   for a single keypress (no Enter needed), print the matched choice, and
-#   return 0 if it matches the first (default-selected) choice, 1
-#   otherwise. `choices` defaults to "y/n" and is a "/"-separated list;
-#   capitalize exactly one letter to make it the default choice, selected
-#   by pressing Enter with no other input. Output goes to stderr except the
-#   final matched choice, which is echoed to stdout so it can be captured.
+#   Single-keypress prompt. Prints <question> in <color>, waits for one
+#   key (no Enter needed), and echoes the matched choice to stdout.
+#
+#   - `choices`: "/"-separated single letters, default "y/n". Capitalize
+#     one letter to make it the default (picked by pressing Enter).
+#   - An unmatched key is ignored — no error, waits for another keypress.
+#   - Returns 0 if the match is the first-listed choice, 1 otherwise —
+#     `run::prompt ... "y/N" && deploy` reads as "if yes, do the thing."
+#   - Tasks run under `set -e`; for 3+-way choices, guard the capture with
+#     `|| true` so a non-default pick doesn't abort the task.
 #
 #   Examples:
 #     run::prompt cyan "Deploy to production?" "y/N" && deploy   # default: no
 #     if run::prompt cyan "Overwrite existing file?" "Y/n"; then ...; fi
-#     choice="$(run::prompt magenta "Pick one" "staging/production")"
+#     choice="$(run::prompt magenta "Deploy to: (s)taging/(p)roduction/(c)anary" "s/p/c")" || true
+#     case "$choice" in s) ... ;; p) ... ;; c) ... ;; esac
 run::prompt() {
-  local color="$1" question="$2" choices="${3:-y/n}" reply default="" o lower first
+  local color="$1" question="$2" choices="${3:-y/n}" reply default="" o lower first rc
   local -a opts
   IFS='/' read -ra opts <<< "$choices"
   first="$(printf '%s' "${opts[0]}" | tr '[:upper:]' '[:lower:]')"
@@ -94,19 +98,29 @@ run::prompt() {
   done
   run::color_echo "$color" "$question" >&2
   printf ' (%s) ' "$choices" >&2
-  # Single keypress, no Enter needed (matched against opts by prefix below).
-  IFS= read -rsn 1 reply || reply=""
-  printf '%s\n' "$reply" >&2
-  reply="${reply:-$default}"
-  reply="$(printf '%s' "$reply" | tr '[:upper:]' '[:lower:]')"
-  for o in "${opts[@]}"; do
-    lower="$(printf '%s' "$o" | tr '[:upper:]' '[:lower:]')"
-    if [ -n "$reply" ] && [[ "$reply" == "$lower"* ]]; then
-      printf '%s\n' "$lower"
-      [ "$lower" = "$first" ] && return 0 || return 1
-    fi
+  # An unrecognized keypress is silently ignored (no error, no re-prompt) —
+  # the loop just waits for another keypress rather than advancing.
+  while true; do
+    # Single keypress, no Enter needed (matched against opts by prefix below).
+    rc=0
+    IFS= read -rsn 1 reply || rc=$?
+    # Drain a stray Enter (or other trailing input) some users press out of
+    # habit, so it doesn't get silently consumed as the answer to the *next*
+    # prompt.
+    while IFS= read -rsn 1 -t 0.3 _ 2>/dev/null; do :; done
+    reply="${reply:-$default}"
+    reply="$(printf '%s' "$reply" | tr '[:upper:]' '[:lower:]')"
+    for o in "${opts[@]}"; do
+      lower="$(printf '%s' "$o" | tr '[:upper:]' '[:lower:]')"
+      if [ -n "$reply" ] && [[ "$reply" == "$lower"* ]]; then
+        printf '%s\n' "$lower" >&2   # visible echo of the accepted keypress
+        printf '%s\n' "$lower"
+        [ "$lower" = "$first" ] && return 0 || return 1
+      fi
+    done
+    # Can't get further input once stdin is exhausted; give up rather than loop forever.
+    [ "$rc" -ne 0 ] && return 1
   done
-  return 1
 }
 
 # run::user_input <color> <label>
