@@ -100,14 +100,29 @@ depends_on() {
 cmd_list() {
   printf '\n'
   run_color_echo neon "run.sh"
-  printf ' — tasks in this project\n\n'
+  printf ' — tasks in '
+  run_color_echo cyan "$TASK_DIR"
+  printf ' (v0.0.1)\n\n'
   local f name has_tasks=0
   for f in "$TASK_DIR"/*.sh; do
     [ -e "$f" ] || continue
     has_tasks=1
     name="$(basename "$f" .sh)"
     # shellcheck disable=SC1090
-    printf '  %-15s %s\n' "$name" "$(. "$f"; description)"
+    if ! desc="$(
+      . "$f"
+      for fn in description help main; do
+        declare -f "$fn" >/dev/null 2>&1 || { echo "error: task '$name' (bin/$name.sh) must define a $fn() function" >&2; exit 1; }
+      done
+      description
+    )"; then
+      exit 1
+    fi
+    printf '  '
+    run_color_echo green "$name"
+    local width=$((17 - ${#name}))
+    [ $width -lt 1 ] && width=1
+    printf '%*s%s\n' $width " " "$desc"
   done
   if [ "$has_tasks" -eq 0 ]; then
     printf '  No tasks yet.\n\n'
@@ -116,18 +131,19 @@ cmd_list() {
     printf '    description() { echo "One-line summary"; }\n'
     printf '    help() { echo "Usage: ./run <name> [args...]"; }\n'
     printf '    main() { echo "task logic goes here, receives \\"$@\\""; }\n\n'
-    printf '  Or copy a starting point from https://github.com/imgproxy/run.sh/blob/main/examples/task.sh\n\n'
+    printf '  Or download an example task:\n\n'
+    printf '    mkdir -p bin && curl -fsSL https://raw.githubusercontent.com/imgproxy/run.sh/main/examples/task.sh -o bin/example.sh\n\n'
     printf '  Optionally, create a .runrc file at the project root to define shared\n'
-    printf '  functions and variables for your tasks.\n'
+    printf '  functions and variables for your tasks.\n\n'
+    printf '  '
+    run_color_echo green "install-global"
+    # shellcheck disable=SC2016
+    printf '%*s%s\n' $((17 - 14)) " " "— add a global \`run\` shell function to your shell rc"
   else
-    printf '\n'
-    run_color_echo neon "  help"
-    printf ' — show a task'"'"'s help text\n'
+    printf '  '
+    run_color_echo green "help"
+    printf '%*s%s\n' $((17 - 4)) " " "Show a <task>'s help message"
   fi
-  printf '\n'
-  run_color_echo neon "  install-global"
-  # shellcheck disable=SC2016
-  printf ' — add a global `run` shell function to your shell rc\n'
   printf '\n'
 }
 
@@ -144,6 +160,10 @@ cmd_help() {
   fi
   # shellcheck disable=SC1090
   . "$TASK_DIR/$task.sh"
+  if ! declare -f help >/dev/null 2>&1; then
+    echo "error: task '$task' (bin/$task.sh) must define a help() function" >&2
+    return 1
+  fi
   help
 }
 
@@ -232,6 +252,10 @@ case "${1:-}" in
     fi
     # shellcheck disable=SC1090
     . "$TASK_DIR/$task.sh"
+    if ! declare -f main >/dev/null 2>&1; then
+      echo "error: task '$task' (bin/$task.sh) must define a main() function" >&2
+      exit 1
+    fi
     main "$@"
     ;;
 esac

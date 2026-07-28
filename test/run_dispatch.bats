@@ -39,10 +39,17 @@ teardown() {
   [[ "$output" == *"show a task"* ]]
 }
 
-@test "no-arg listing shows built-in 'install-global' task" {
+@test "no-arg listing shows install-global hint only when no tasks exist" {
+  rm -f bin/greet.sh
   run ./run
   [ "$status" -eq 0 ]
   [[ "$output" == *"install-global"* ]]
+}
+
+@test "no-arg listing hides install-global hint once a task exists" {
+  run ./run
+  [ "$status" -eq 0 ]
+  [[ "$output" != *"install-global"* ]]
 }
 
 @test "no-arg listing does not list .runrc as a task" {
@@ -154,4 +161,64 @@ EOF
   run ./run install-global
   [ "$status" -eq 0 ]
   [[ "$output" == *"detected shell"* ]]
+}
+
+@test "task missing description() fails at listing time" {
+  cat > bin/bad-desc.sh <<'EOF'
+#!/usr/bin/env bash
+help() { echo "Help"; }
+main() { echo "Main"; }
+EOF
+
+  run ./run
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"must define a description()"* ]]
+}
+
+@test "task missing help() fails at listing time" {
+  cat > bin/bad-help.sh <<'EOF'
+#!/usr/bin/env bash
+description() { echo "Desc"; }
+main() { echo "Main"; }
+EOF
+
+  run ./run
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"must define a help()"* ]]
+}
+
+@test "task missing main() fails at listing time" {
+  cat > bin/bad-main.sh <<'EOF'
+#!/usr/bin/env bash
+description() { echo "Desc"; }
+help() { echo "Help"; }
+EOF
+
+  run ./run
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"must define a main()"* ]]
+}
+
+@test "./run help <task> errors if task missing help()" {
+  cat > bin/no-help.sh <<'EOF'
+#!/usr/bin/env bash
+description() { echo "Desc"; }
+main() { echo "Main"; }
+EOF
+
+  run ./run help no-help
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"must define a help()"* ]]
+}
+
+@test "./run <task> errors if task missing main()" {
+  cat > bin/no-main.sh <<'EOF'
+#!/usr/bin/env bash
+description() { echo "Desc"; }
+help() { echo "Help"; }
+EOF
+
+  run ./run no-main
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"must define a main()"* ]]
 }
