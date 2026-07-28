@@ -77,6 +77,25 @@ main() {
 }</code></pre>
   </section>
 
+  <section>
+    <h2>Helpers and input</h2>
+    <p>
+      Built-in helpers available in all tasks:
+    </p>
+    <pre class="snippet"><code>require_tool docker "docker is required"
+require_arg --env "$env"
+depends_on build test
+
+# Interactive input
+if prompt "Deploy to production?"; then
+  env=$(user_input "Environment")
+  echo "Deploying to $env..."
+fi</code></pre>
+    <p>
+      Other helpers: <code>require_tool</code>, <code>require_arg</code>, <code>run_color_echo</code>, <code>NO_COLOR</code> env var.
+    </p>
+  </section>
+
   <footer>
     <a href="https://github.com/imgproxy/run.sh">github.com/imgproxy/run.sh</a> · MIT license
   </footer>

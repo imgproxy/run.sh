@@ -36,7 +36,7 @@ teardown() {
   run ./run
   [ "$status" -eq 0 ]
   [[ "$output" == *"help"* ]]
-  [[ "$output" == *"show a task"* ]]
+  [[ "$output" == *"help message"* ]]
 }
 
 @test "no-arg listing shows install-global hint only when no tasks exist" {

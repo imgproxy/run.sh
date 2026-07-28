@@ -2,7 +2,7 @@ Output docs/demo.gif
 
 Set Shell "bash"
 Set FontSize 18
-Set Width 1200
+Set Width 1450
 Set Height 700
 Set Padding 20
 Set Theme "Dracula"
@@ -33,7 +33,7 @@ Show
 # 2. Run with no tasks yet
 Type "./run"
 Enter
-Sleep 1.5s
+Sleep 3.5s
 
 Hide
 Type "clear"

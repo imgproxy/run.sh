@@ -39,6 +39,25 @@ require_arg() {
   fi
 }
 
+prompt() {
+  local question="$1" reply
+  run_color_echo cyan "$question"
+  printf ' (y/n) '
+  read -r reply
+  case "$reply" in
+    [yY]*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+user_input() {
+  local label="$1"
+  run_color_echo cyan "$label" >&2
+  local reply
+  read -r reply
+  printf '%s\n' "$reply"
+}
+
 run_colors_enabled() {
   [ -n "${NO_COLOR:-}" ] && return 1
   [ -t 1 ] || return 1
@@ -138,7 +157,7 @@ cmd_list() {
     printf '  '
     run_color_echo green "install-global"
     # shellcheck disable=SC2016
-    printf '%*s%s\n' $((17 - 14)) " " "— add a global \`run\` shell function to your shell rc"
+    printf '%*s%s\n' $((17 - 14)) " " "Add a global \`run\` shell function (arg: bash|zsh|fish)"
   else
     printf '  '
     run_color_echo green "help"
@@ -168,30 +187,63 @@ cmd_help() {
 }
 
 cmd_install_global() {
-  local shell_name rc_file
-  case "${SHELL:-}" in
-    */bash) shell_name="bash"; rc_file="$HOME/.bashrc" ;;
-    */zsh)  shell_name="zsh";  rc_file="$HOME/.zshrc" ;;
-    */fish) shell_name="fish"; rc_file="$HOME/.config/fish/config.fish" ;;
-    *)
-      msg_err "unsupported or unset \$SHELL ('${SHELL:-<unset>}'); expected bash, zsh, or fish"
-      return 1
-      ;;
-  esac
+  local shell_name rc_file force=0
+  local arg_shell="${1:-}"
+
+  # Check for --force flag
+  if [ "$arg_shell" = "--force" ]; then
+    force=1
+    arg_shell=""
+  fi
+
+  # Determine shell: use argument if provided, otherwise detect from $SHELL
+  if [ -n "$arg_shell" ]; then
+    case "$arg_shell" in
+      bash) shell_name="bash"; rc_file="$HOME/.bashrc" ;;
+      zsh)  shell_name="zsh";  rc_file="$HOME/.zshrc" ;;
+      fish) shell_name="fish"; rc_file="$HOME/.config/fish/config.fish" ;;
+      *)
+        msg_err "unsupported shell '$arg_shell'; expected bash, zsh, or fish"
+        return 1
+        ;;
+    esac
+  else
+    case "${SHELL:-}" in
+      */bash) shell_name="bash"; rc_file="$HOME/.bashrc" ;;
+      */zsh)  shell_name="zsh";  rc_file="$HOME/.zshrc" ;;
+      */fish) shell_name="fish"; rc_file="$HOME/.config/fish/config.fish" ;;
+      *)
+        msg_err "unsupported or unset \$SHELL ('${SHELL:-<unset>}'); expected bash, zsh, or fish"
+        return 1
+        ;;
+    esac
+  fi
   msg_info "detected shell: $shell_name (\$SHELL=${SHELL})"
   msg_info "target rc file: $rc_file"
 
   local marker_begin="# >>> run.sh install-global >>>"
   local marker_end="# <<< run.sh install-global <<<"
 
-  if [ -f "$rc_file" ] && grep -qF "$marker_begin" "$rc_file" 2>/dev/null; then
-    msg_skip "run function already installed in $rc_file"
-  else
-    mkdir -p "$(dirname "$rc_file")"
-    if [ "$shell_name" = "fish" ]; then
-      {
-        printf '\n%s\n' "$marker_begin"
-        cat <<'EOF'
+  if [ $force -eq 0 ] && [ -f "$rc_file" ] && grep -qF "$marker_begin" "$rc_file" 2>/dev/null; then
+    if prompt "run function already installed in $rc_file. Override?"; then
+      force=1
+    else
+      return 0
+    fi
+  fi
+
+  if [ $force -eq 1 ] && [ -f "$rc_file" ]; then
+    # Force reinstall: remove old markers if present
+    sed -i.bak "/^${marker_begin//>/\\>}/,/^${marker_end//</\\<}/d" "$rc_file" 2>/dev/null || \
+    sed -i '' "/^${marker_begin//>/\\>}/,/^${marker_end//</\\<}/d" "$rc_file"
+    rm -f "$rc_file.bak"
+  fi
+
+  mkdir -p "$(dirname "$rc_file")"
+  if [ "$shell_name" = "fish" ]; then
+    {
+      printf '\n%s\n' "$marker_begin"
+      cat <<'EOF'
 function run
     set -l dir (pwd)
     while test "$dir" != "$HOME"; and test "$dir" != "/"
@@ -205,12 +257,12 @@ function run
     return 1
 end
 EOF
-        printf '%s\n' "$marker_end"
-      } >> "$rc_file"
-    else
-      {
-        printf '\n%s\n' "$marker_begin"
-        cat <<'EOF'
+      printf '%s\n' "$marker_end"
+    } >> "$rc_file"
+  else
+    {
+      printf '\n%s\n' "$marker_begin"
+      cat <<'EOF'
 run() {
   local dir="$PWD" parent
   while :; do
@@ -229,11 +281,10 @@ run() {
   return 1
 }
 EOF
-        printf '%s\n' "$marker_end"
-      } >> "$rc_file"
-    fi
-    msg_ok "wrote run() function to $rc_file"
+      printf '%s\n' "$marker_end"
+    } >> "$rc_file"
   fi
+  msg_ok "wrote run() function to $rc_file"
 
   printf '\n'
   msg_info "next: run 'source $rc_file' (or open a new terminal), then 'run <task>' works from any subdirectory of a run.sh project"
