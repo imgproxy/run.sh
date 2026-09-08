@@ -171,6 +171,22 @@ directly.
   echo "Hello, $name!"
   ```
 
+### Safety checks
+
+- **`run::friday_deploy`** — extra confirmation gate for deploy-like tasks.
+  If today is Friday, Saturday, or Sunday, shows a colored warning banner
+  and requires an explicit "REALLY sure?" confirmation before continuing
+  (returns 1 if declined). Any other day, it's a silent no-op that returns
+  0 immediately.
+
+  ```sh
+  main() {
+    run::friday_deploy || return 1
+    run::depends_on build test
+    echo "deploying..."
+  }
+  ```
+
 ### Output
 
 - **`run::color_echo <color> <text>`** — prints `<text>` in `<color>` (no

@@ -31,6 +31,7 @@
       entirely yours to edit.</li>
     <li>Project-wide helpers and variables go in <code>.runrc</code> (optional).</li>
     <li>Compose tasks with <code>run::depends_on task1 task2</code>.</li>
+    <li>Extra Friday-deploy confirmation with <code>run::friday_deploy</code>.</li>
     <li>Optional <code>./run install-global</code> adds a shell function that finds your project <code>run</code> in the
       parent subdirectory.</li>
     </li>
@@ -73,6 +74,21 @@ EOF
     </p>
     <pre class="snippet"><code>main() {
   run::depends_on build test
+  echo "deploying..."
+}</code></pre>
+  </section>
+
+  <section>
+    <h2>Friday deploys</h2>
+    <p>
+      <code>run::friday_deploy</code> adds an extra confirmation gate for
+      deploy-like tasks on Friday, Saturday, or Sunday &mdash; a colored
+      warning banner plus a "REALLY sure?" prompt. Any other day it's a
+      no-op.
+    </p>
+    <pre class="snippet"><code>main() {
+  <span class="fn">run::friday_deploy</span> || return 1
+  <span class="fn">run::depends_on</span> build test
   echo "deploying..."
 }</code></pre>
   </section>

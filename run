@@ -258,6 +258,36 @@ run::depends_on() {
   done
 }
 
+# run::friday_deploy
+#   Extra confirmation gate for deploy-like tasks: if today is Friday,
+#   Saturday, or Sunday, shows a colored warning banner and requires an
+#   explicit "REALLY sure?" confirmation before continuing (returns 1 if
+#   declined). On any other day it's a silent no-op that returns 0
+#   immediately. Ported from imgproxy/license-server's Makefile.
+#
+#   Example:
+#     main() { run::friday_deploy || return 1; run::depends_on build; ... }
+run::friday_deploy() {
+  local dow dow_name
+  dow="$(date +%u)"
+  [ "$dow" -le 4 ] && return 0
+  dow_name="$(date +%A)"
+  run::prompt red "It's $dow_name. Are you REALLY sure?" "y/N" >/dev/null || return 1
+  printf '\n'
+  run::color_echo green "Ok, you're the boss..."; printf '\n\n'
+  run::color_echo blue "┓┏┓┏┓┃"; printf '\n'
+  run::color_echo blue "┛┗┛┗┛┃"; printf '⟍ ○⟋   '; run::color_echo green "$dow_name"; printf '\n'
+  run::color_echo blue "┓┏┓┏┓┃"; printf '  ∕    '; run::color_echo green "deploy,"; printf '\n'
+  run::color_echo blue "┛┗┛┗┛┃"; printf 'ノ)    '; run::color_echo green "good"; printf '\n'
+  run::color_echo blue "┓┏┓┏┓┃"; printf '       '; run::color_echo green "luck!"; printf '\n'
+  run::color_echo blue "┛┗┛┗┛┃"; printf '\n'
+  run::color_echo blue "┓┏┓┏┓┃"; printf '\n'
+  run::color_echo blue "┛┗┛┗┛┃"; printf '\n'
+  run::color_echo blue "┓┏┓┏┓┃"; printf '\n'
+  run::color_echo blue "┃┃┃┃┃┃"; printf '\n'
+  run::color_echo blue "┻┻┻┻┻┻"; printf '\n'
+}
+
 if [ -f "$PROJECT_ROOT/.runrc" ]; then
   # shellcheck source=/dev/null
   . "$PROJECT_ROOT/.runrc"
@@ -282,6 +312,7 @@ run::_header() {
 
 run::_cmd_list() {
   run::_header
+  local col_width=22
   local f name has_tasks=0
   for f in "$TASK_DIR"/*.sh; do
     [ -e "$f" ] || continue
@@ -299,7 +330,7 @@ run::_cmd_list() {
     fi
     printf '  '
     run::color_echo green "$name"
-    local width=$((17 - ${#name}))
+    local width=$((col_width - ${#name}))
     [ $width -lt 1 ] && width=1
     printf '%*s%s\n' $width " " "$desc"
   done
@@ -317,11 +348,11 @@ run::_cmd_list() {
     printf '  '
     run::color_echo green "install-global"
     # shellcheck disable=SC2016
-    printf '%*s%s\n' $((17 - 14)) " " "Add a global \`run\` shell function (arg: bash|zsh|fish)"
+    printf '%*s%s\n' $((col_width - 14)) " " "Add a global \`run\` shell function (arg: bash|zsh|fish)"
   else
     printf '  '
     run::color_echo green "help"
-    printf '%*s%s\n' $((17 - 4)) " " "Show a <task>'s help message"
+    printf '%*s%s\n' $((col_width - 4)) " " "Show a <task>'s help message"
   fi
   printf '\n'
 }
