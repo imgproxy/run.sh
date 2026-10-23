@@ -49,6 +49,12 @@ of `../../run <task>`.
   the shell name can be given in either order, e.g. both
   `install-global --force zsh` and `install-global zsh --force` work.
 
+It also registers tab completion for `run`: task names (from the
+filenames in `bin/`), plus `help` and `install-global`, and task names again
+after `help`. Completion only globs `bin/*.sh` — it never sources your tasks,
+so it stays instant. If you installed before completion existed, re-run
+`./run install-global --force` to pick it up.
+
 The installation is idempotent — running `./run install-global` twice will
 only append the function once (you'll be prompted before it's overwritten,
 unless `--force` is given).

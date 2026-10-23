@@ -134,3 +134,37 @@ EOF
   [ "$status" -ne 0 ]
   [[ "$output" == *"unsupported"* ]]
 }
+
+@test "install-global registers tab completion for each shell" {
+  mkdir -p "$FAKE_HOME/projects/app/bin"
+  cp "$RUN_ROOT/run" "$FAKE_HOME/projects/app/run"
+  chmod +x "$FAKE_HOME/projects/app/run"
+
+  cd "$FAKE_HOME/projects/app"
+  HOME="$FAKE_HOME" ./run install-global bash >/dev/null
+  HOME="$FAKE_HOME" ./run install-global zsh >/dev/null
+  HOME="$FAKE_HOME" ./run install-global fish >/dev/null
+  grep -q "complete -F _run_complete run" "$FAKE_HOME/.bashrc"
+  grep -q "compdef _run run" "$FAKE_HOME/.zshrc"
+  grep -q "complete -c run" "$FAKE_HOME/.config/fish/config.fish"
+}
+
+@test "bash completion lists tasks from a nested directory" {
+  mkdir -p "$FAKE_HOME/projects/app/bin" "$FAKE_HOME/projects/app/src"
+  cp "$RUN_ROOT/run" "$FAKE_HOME/projects/app/run"
+  chmod +x "$FAKE_HOME/projects/app/run"
+  touch "$FAKE_HOME/projects/app/bin/deploy.sh" "$FAKE_HOME/projects/app/bin/dev.sh"
+
+  cd "$FAKE_HOME/projects/app"
+  HOME="$FAKE_HOME" ./run install-global bash >/dev/null
+  cd src
+  run env HOME="$FAKE_HOME" bash -c '
+    source "$HOME/.bashrc"
+    COMP_WORDS=(run de); COMP_CWORD=1; _run_complete
+    echo "${COMPREPLY[*]}"
+    COMP_WORDS=(run help ""); COMP_CWORD=2; _run_complete
+    echo "${COMPREPLY[*]}"'
+  [ "$status" -eq 0 ]
+  [ "${lines[0]}" = "deploy dev" ]
+  [ "${lines[1]}" = "deploy dev" ]
+}

@@ -457,6 +457,25 @@ function run
     echo "run: no run.sh project found in this directory or its parents" >&2
     return 1
 end
+
+# Tab completion: task names come from globbing bin/*.sh — nothing is sourced.
+function __run_tasks
+    set -l dir (pwd)
+    while test "$dir" != "$HOME"; and test "$dir" != "/"
+        if test -x "$dir/run"
+            for f in $dir/bin/*.sh
+                string replace -r '.*/(.*)\.sh$' '$1' -- $f
+            end
+            return 0
+        end
+        set dir (dirname $dir)
+    end
+end
+complete -c run -f
+complete -c run -n '__fish_use_subcommand' -a '(__run_tasks)'
+complete -c run -n '__fish_use_subcommand' -a 'help install-global'
+complete -c run -n '__fish_seen_subcommand_from help' -a '(__run_tasks)'
+complete -c run -n '__fish_seen_subcommand_from install-global' -a 'bash zsh fish --force'
 EOF
       printf '%s\n' "$marker_end"
     } >> "$rc_file"
@@ -482,6 +501,56 @@ run() {
   return 1
 }
 EOF
+      # Tab completion: task names come from globbing bin/*.sh — nothing is sourced.
+      if [ "$shell_name" = "zsh" ]; then
+        cat <<'EOF'
+
+_run() {
+  local dir="$PWD" f
+  local -a tasks
+  while :; do
+    [[ "$dir" == "$HOME" || "$dir" == "/" ]] && return 0
+    [[ -x "$dir/run" ]] && break
+    dir="${dir:h}"
+  done
+  for f in "$dir"/bin/*.sh(N); do tasks+=("${${f:t}%.sh}"); done
+  case $CURRENT in
+    2) compadd -a tasks; compadd help install-global ;;
+    3) case "$words[2]" in
+         help) compadd -a tasks ;;
+         install-global) compadd bash zsh fish -- --force ;;
+       esac ;;
+  esac
+}
+if (( ! $+functions[compdef] )); then autoload -Uz compinit && compinit; fi
+compdef _run run
+EOF
+      else
+        cat <<'EOF'
+
+_run_complete() {
+  local dir="$PWD" cur="${COMP_WORDS[COMP_CWORD]}" f
+  local -a words=()
+  while :; do
+    { [ "$dir" = "$HOME" ] || [ "$dir" = "/" ]; } && return 0
+    [ -x "$dir/run" ] && break
+    dir="${dir%/*}"; dir="${dir:-/}"
+  done
+  if [ "$COMP_CWORD" -eq 1 ] || { [ "$COMP_CWORD" -eq 2 ] && [ "${COMP_WORDS[1]}" = "help" ]; }; then
+    for f in "$dir"/bin/*.sh; do
+      [ -e "$f" ] || continue
+      f="${f##*/}"; words+=("${f%.sh}")
+    done
+    [ "$COMP_CWORD" -eq 1 ] && words+=(help install-global)
+  elif [ "$COMP_CWORD" -eq 2 ] && [ "${COMP_WORDS[1]}" = "install-global" ]; then
+    words=(bash zsh fish --force)
+  fi
+  local IFS=$'\n'
+  COMPREPLY=($(compgen -W "${words[*]}" -- "$cur"))
+}
+complete -F _run_complete run
+EOF
+      fi
       printf '%s\n' "$marker_end"
     } >> "$rc_file"
   fi
