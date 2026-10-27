@@ -91,7 +91,7 @@ main() {
   exit code.
 
 Task files are `source`d, not executed as subprocesses, so they run in the
-same shell as `./run` and have access to `PROJECT_ROOT`, `TASK_DIR`, every
+same shell as `./run` and have access to `PROJECT_ROOT`, `TASK_DIR`, `TASK_NAME`, every
 helper described below, and anything defined in `.runrc`.
 
 See `examples/task.sh` for a fuller example demonstrating flags, positional
@@ -113,6 +113,8 @@ directly.
   containing `./run`). Use it to build paths that don't depend on the
   caller's current working directory, e.g. `"$PROJECT_ROOT/config/app.yml"`.
 - **`TASK_DIR`** — absolute path to the task directory (`$PROJECT_ROOT/bin`).
+- **`TASK_NAME`** — name of the task being run or sourced (`bin/<name>.sh`
+  → `<name>`). Not set while `.runrc` is sourced.
 
 ### Validation
 

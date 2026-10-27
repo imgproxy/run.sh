@@ -89,6 +89,27 @@ EOF
   [[ "$output" == *"called from .runrc"* ]]
 }
 
+@test "TASK_NAME is set to the task name in main, help and description" {
+  cat > bin/whoami.sh <<'EOF'
+#!/usr/bin/env bash
+description() { echo "desc-name=$TASK_NAME"; }
+help() { echo "help-name=$TASK_NAME"; }
+main() { echo "main-name=$TASK_NAME"; }
+EOF
+
+  run ./run whoami
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"main-name=whoami"* ]]
+
+  run ./run help whoami
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"help-name=whoami"* ]]
+
+  run ./run
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"desc-name=whoami"* ]]
+}
+
 @test "./run help <task> shows the task's help text" {
   run ./run help greet
   [ "$status" -eq 0 ]

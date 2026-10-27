@@ -40,6 +40,9 @@ TASK_DIR="$PROJECT_ROOT/bin"
 #   caller's current directory, e.g. "$PROJECT_ROOT/config/app.yml".
 #
 # TASK_DIR — absolute path to the task directory ($PROJECT_ROOT/bin).
+#
+# TASK_NAME — name of the task being run or sourced (bin/<name>.sh → <name>).
+#   Not set while .runrc is sourced.
 
 # run::require_tool <cmd> <message>
 #   Exit the whole run with a friendly error if <cmd> is not found on PATH.
@@ -320,6 +323,9 @@ run::_cmd_list() {
     name="$(basename "$f" .sh)"
     # shellcheck disable=SC1090
     if ! desc="$(
+      # shellcheck disable=SC2034,SC1090
+      TASK_NAME="$name"
+      # shellcheck disable=SC1090
       . "$f"
       for fn in description help main; do
         declare -f "$fn" >/dev/null 2>&1 || { echo "error: task '$name' (bin/$name.sh) must define a $fn() function" >&2; exit 1; }
@@ -368,6 +374,8 @@ run::_cmd_help() {
     echo "error: unknown task '$task'" >&2
     return 1
   fi
+  # shellcheck disable=SC2034
+  TASK_NAME="$task"
   # shellcheck disable=SC1090
   . "$TASK_DIR/$task.sh"
   if ! declare -f help >/dev/null 2>&1; then
@@ -571,6 +579,8 @@ case "${1:-}" in
       run::_cmd_list >&2
       exit 1
     fi
+    # shellcheck disable=SC2034
+    TASK_NAME="$task"
     # shellcheck disable=SC1090
     . "$TASK_DIR/$task.sh"
     if ! declare -f main >/dev/null 2>&1; then
