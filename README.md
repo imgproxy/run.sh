@@ -1,6 +1,3 @@
-> [!CAUTION]
-> This is work in progress, use on your own risk.
-
 # run.sh
 
 A Makefile replacement written in pure bash. No DSL, no runtime dependencies,
