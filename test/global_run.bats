@@ -5,6 +5,9 @@ setup() {
   FAKE_ROOT="$(mktemp -d)"
   FAKE_HOME="$FAKE_ROOT/home/testuser"
   mkdir -p "$FAKE_HOME"
+  # Sandbox: never let a test touch the real shell rc files.
+  export HOME="$FAKE_HOME"
+  export SHELL=/bin/bash
 }
 
 teardown() {
@@ -12,13 +15,19 @@ teardown() {
   rm -rf "$FAKE_ROOT"
 }
 
-@test "install-global writes a run function to ~/.bashrc" {
-  mkdir -p "$FAKE_HOME/projects/app"
-  cp "$RUN_ROOT/run" "$FAKE_HOME/projects/app/run"
-  chmod +x "$FAKE_HOME/projects/app/run"
-  mkdir "$FAKE_HOME/projects/app/bin"
+# Build a project at $PROJECT with a bin/ dir and an executable copy of `run`.
+# Extra args are additional directories to create.
+make_project() {
+  PROJECT="$FAKE_HOME/projects/app"
+  mkdir -p "$PROJECT/bin" "$@"
+  cp "$RUN_ROOT/run" "$PROJECT/run"
+  chmod +x "$PROJECT/run"
+}
 
-  cd "$FAKE_HOME/projects/app"
+@test "install-global writes a run function to ~/.bashrc" {
+  make_project
+
+  cd "$PROJECT"
   HOME="$FAKE_HOME" SHELL=/bin/bash ./run install-global >/dev/null
   [ -f "$FAKE_HOME/.bashrc" ]
   grep -qF "# >>> run.sh install-global >>>" "$FAKE_HOME/.bashrc"
@@ -26,12 +35,10 @@ teardown() {
 }
 
 @test "install-global reports what it detected" {
-  mkdir -p "$FAKE_HOME/projects/app/bin"
-  cp "$RUN_ROOT/run" "$FAKE_HOME/projects/app/run"
-  chmod +x "$FAKE_HOME/projects/app/run"
+  make_project
 
-  cd "$FAKE_HOME/projects/app"
-  run env HOME="$FAKE_HOME" SHELL=/bin/bash ./run install-global
+  cd "$PROJECT"
+  run env HOME="$FAKE_HOME" SHELL=/bin/bash ./run install-global </dev/null
   [ "$status" -eq 0 ]
   [[ "$output" == *"detected shell: bash"* ]]
   [[ "$output" == *"target rc file:"* ]]
@@ -39,13 +46,11 @@ teardown() {
 }
 
 @test "install-global is idempotent (second run skips)" {
-  mkdir -p "$FAKE_HOME/projects/app/bin"
-  cp "$RUN_ROOT/run" "$FAKE_HOME/projects/app/run"
-  chmod +x "$FAKE_HOME/projects/app/run"
+  make_project
 
-  cd "$FAKE_HOME/projects/app"
+  cd "$PROJECT"
   HOME="$FAKE_HOME" SHELL=/bin/bash ./run install-global >/dev/null
-  run env HOME="$FAKE_HOME" SHELL=/bin/bash ./run install-global
+  run env HOME="$FAKE_HOME" SHELL=/bin/bash ./run install-global </dev/null
   [ "$status" -eq 0 ]
   [[ "$output" == *"◇"* ]]
   [[ "$output" == *"already installed"* ]]
@@ -57,12 +62,9 @@ teardown() {
 }
 
 @test "the sourced function finds a nested project" {
-  mkdir -p "$FAKE_HOME/projects/app/src/deep/nested"
-  cp "$RUN_ROOT/run" "$FAKE_HOME/projects/app/run"
-  chmod +x "$FAKE_HOME/projects/app/run"
-  mkdir "$FAKE_HOME/projects/app/bin"
+  make_project "$FAKE_HOME/projects/app/src/deep/nested"
 
-  cat > "$FAKE_HOME/projects/app/bin/hello.sh" <<'EOF'
+  cat > "$PROJECT/bin/hello.sh" <<'EOF'
 #!/usr/bin/env bash
 description() { echo "Hello task"; }
 help() { echo "Usage: ./run hello"; }
@@ -99,48 +101,53 @@ EOF
   [[ "$output" == *"no run.sh project found"* ]]
 }
 
-@test "install-global with zsh rc file" {
-  mkdir -p "$FAKE_HOME/projects/app/bin"
-  cp "$RUN_ROOT/run" "$FAKE_HOME/projects/app/run"
-  chmod +x "$FAKE_HOME/projects/app/run"
+# Shell matrix: each shell is detected purely from a faked $SHELL (no argument)
+# and must write only its own rc file, inside the fake $HOME.
+check_shell_install() {
+  local shell_path="$1" rc_rel="$2" fn_pat="$3" comp_pat="$4"
+  local rc all_rcs=".bashrc .zshrc .config/fish/config.fish" other
 
-  cd "$FAKE_HOME/projects/app"
-  HOME="$FAKE_HOME" SHELL=/bin/zsh ./run install-global >/dev/null
-  [ -f "$FAKE_HOME/.zshrc" ]
-  grep -qF "# >>> run.sh install-global >>>" "$FAKE_HOME/.zshrc"
-  grep -q "run() {" "$FAKE_HOME/.zshrc"
+  make_project
+  cd "$PROJECT"
+
+  HOME="$FAKE_HOME" SHELL="$shell_path" ./run install-global >/dev/null </dev/null
+  rc="$FAKE_HOME/$rc_rel"
+  [ -f "$rc" ]
+  grep -qF "# >>> run.sh install-global >>>" "$rc"
+  grep -q "$fn_pat" "$rc"
+  grep -q "$comp_pat" "$rc"
+
+  for other in $all_rcs; do
+    [ "$other" = "$rc_rel" ] && continue
+    [ ! -e "$FAKE_HOME/$other" ]
+  done
 }
 
-@test "install-global with fish rc file (content assertion only)" {
-  mkdir -p "$FAKE_HOME/projects/app/bin"
-  cp "$RUN_ROOT/run" "$FAKE_HOME/projects/app/run"
-  chmod +x "$FAKE_HOME/projects/app/run"
+@test "install-global detects bash from \$SHELL (rc, function, completion)" {
+  check_shell_install /bin/bash .bashrc "run() {" "complete -F _run_complete run"
+}
 
-  cd "$FAKE_HOME/projects/app"
-  HOME="$FAKE_HOME" SHELL=/usr/bin/fish ./run install-global >/dev/null
-  [ -f "$FAKE_HOME/.config/fish/config.fish" ]
-  grep -qF "# >>> run.sh install-global >>>" "$FAKE_HOME/.config/fish/config.fish"
-  grep -q "function run" "$FAKE_HOME/.config/fish/config.fish"
-  grep -q "end" "$FAKE_HOME/.config/fish/config.fish"
+@test "install-global detects zsh from \$SHELL (rc, function, completion)" {
+  check_shell_install /bin/zsh .zshrc "run() {" "compdef _run run"
+}
+
+@test "install-global detects fish from \$SHELL (rc, function, completion)" {
+  check_shell_install /usr/bin/fish .config/fish/config.fish "function run" "complete -c run"
 }
 
 @test "install-global with unsupported shell errors gracefully" {
-  mkdir -p "$FAKE_HOME/projects/app/bin"
-  cp "$RUN_ROOT/run" "$FAKE_HOME/projects/app/run"
-  chmod +x "$FAKE_HOME/projects/app/run"
+  make_project
 
-  cd "$FAKE_HOME/projects/app"
+  cd "$PROJECT"
   run env HOME="$FAKE_HOME" SHELL=/usr/bin/ksh ./run install-global
   [ "$status" -ne 0 ]
   [[ "$output" == *"unsupported"* ]]
 }
 
 @test "install-global registers tab completion for each shell" {
-  mkdir -p "$FAKE_HOME/projects/app/bin"
-  cp "$RUN_ROOT/run" "$FAKE_HOME/projects/app/run"
-  chmod +x "$FAKE_HOME/projects/app/run"
+  make_project
 
-  cd "$FAKE_HOME/projects/app"
+  cd "$PROJECT"
   HOME="$FAKE_HOME" ./run install-global bash >/dev/null
   HOME="$FAKE_HOME" ./run install-global zsh >/dev/null
   HOME="$FAKE_HOME" ./run install-global fish >/dev/null
@@ -150,12 +157,10 @@ EOF
 }
 
 @test "bash completion lists tasks from a nested directory" {
-  mkdir -p "$FAKE_HOME/projects/app/bin" "$FAKE_HOME/projects/app/src"
-  cp "$RUN_ROOT/run" "$FAKE_HOME/projects/app/run"
-  chmod +x "$FAKE_HOME/projects/app/run"
-  touch "$FAKE_HOME/projects/app/bin/deploy.sh" "$FAKE_HOME/projects/app/bin/dev.sh"
+  make_project "$FAKE_HOME/projects/app/src"
+  touch "$PROJECT/bin/deploy.sh" "$PROJECT/bin/dev.sh"
 
-  cd "$FAKE_HOME/projects/app"
+  cd "$PROJECT"
   HOME="$FAKE_HOME" ./run install-global bash >/dev/null
   cd src
   run env HOME="$FAKE_HOME" bash -c '

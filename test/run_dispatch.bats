@@ -3,6 +3,10 @@
 setup() {
   RUN_ROOT="$(cd "$(dirname "$BATS_TEST_FILENAME")/.." && pwd)"
   TEST_DIR="$(mktemp -d)"
+  # Sandbox: never let a test touch the real shell rc files.
+  export HOME="$TEST_DIR/home"
+  export SHELL=/bin/bash
+  mkdir -p "$HOME"
   cd "$TEST_DIR"
   cp "$RUN_ROOT/run" "$TEST_DIR/run"
   chmod +x "$TEST_DIR/run"
