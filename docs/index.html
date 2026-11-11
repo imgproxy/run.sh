@@ -30,7 +30,7 @@
     <li><code>run</code> is a single file you download once and keep; your task logic lives in <code>bin/</code>,
       entirely yours to edit.</li>
     <li>Project-wide helpers and variables go in <code>.runrc</code> (optional).</li>
-    <li>Compose tasks with <code>run::depends_on task1 task2</code>.</li>
+    <li>Compose tasks with <code>run::depends_on</code> and <code>run::run_task</code>.</li>
     <li>Extra Friday-deploy confirmation with <code>run::friday_deploy</code>.</li>
     <li>Optional <code>./run install-global</code> adds a shell function that finds your project <code>run</code> in the
       parent subdirectory.</li>
@@ -75,6 +75,14 @@ EOF
     </p>
     <pre class="snippet"><code>main() {
   run::depends_on build test
+  echo "deploying..."
+}</code></pre>
+    <p>
+      If you need to pass arguments to a dependent task, you can use
+      the <code>run::run_task</code> function.
+    </p>
+    <pre class="snippet"><code>main() {
+  run::run_task build arg1 arg2
   echo "deploying..."
 }</code></pre>
   </section>
