@@ -234,8 +234,18 @@ directly.
 
 ### Composition
 
+- **`run::run_task <task> [args...]`** — runs the named task with the given
+  arguments in a subshell. Use it inside a task's `main()` to invoke other tasks.
+
+  ```sh
+  main() {
+    run::run_task build -o /tmp/my_bin
+    /tmp/my_bin
+  }
+  ```
+
 - **`run::depends_on <task>...`** — runs each named task in order (as
-  `$PROJECT_ROOT/run <task>`), stopping and propagating the exit code at
+  `run::run_task <task>`), stopping and propagating the exit code at
   the first failure. Use it inside a task's `main()` to build tasks out of
   other tasks.
 
