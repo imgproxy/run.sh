@@ -1,5 +1,9 @@
-<h1 style="font-family: monospace;">
-  ./run.sh_
+<h1>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/logo-dark.svg?sanitize=true" />
+    <source media="(prefers-color-scheme: light)" srcset="assets/logo-light.svg?sanitize=true" />
+    <img alt="run.sh logo" title="run.sh" src="assets/logo-light.svg?sanitize=true" />
+  </picture>
 </h1>
 
 `run.sh` is a task runner written in pure bash. No DSL, no runtime dependencies, no build step — just scripts.
