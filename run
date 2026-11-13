@@ -246,13 +246,13 @@ run::msg_info() { run::color_echo yellow "$(run::icon info)";    printf ' %s\n' 
 run::msg_warn() { run::color_echo yellow "$(run::icon warning)"; printf ' %s\n' "$1"; }
 run::msg_err()  { printf 'error: %s\n' "$1" >&2; }
 
-# run::run_task <task> [args...]
+# run::invoke <task> [args...]
 #   Run the specified task (bin/<task>.sh) with the given arguments.
 #   The task is run in a subshell to not affect the current shell's environment.
 #
 #   Example:
-#     run::run_task build arg1 arg2
-run::run_task() {
+#     run::invoke build arg1 arg2
+run::invoke() {
   local task="$1"
   shift
   local task_file="$TASK_DIR/$task.sh"
@@ -291,7 +291,7 @@ run::run_task() {
 run::depends_on() {
   local task
   for task in "$@"; do
-    run::run_task "$task" || return $?
+    run::invoke "$task" || return $?
   done
 }
 
@@ -607,6 +607,6 @@ case "${1:-}" in
   install-global) shift; run::_cmd_install_global "$@" ;;
   help) shift; run::_cmd_help "$@" ;;
   *)
-    run::run_task "$@"
+    run::invoke "$@"
     ;;
 esac

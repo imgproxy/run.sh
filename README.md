@@ -14,7 +14,7 @@
 - Optional global shell command for running tasks from any subdirectory with tab completion.
 - Useful pre-defined helpers and variables for your tasks.
 - Custom project-wide helpers and variables go in `.runrc`.
-- Easy task composition with `run::depends_on` and `run::run_task`.
+- Easy task composition with `run::depends_on` and `run::invoke`.
 
 ![Demo of run.sh in action](assets/demo.gif)
 
@@ -210,16 +210,16 @@ See `examples/task.sh` for a fuller example demonstrating flags, positional args
 
 ### Composition
 
-- **`run::run_task <task> [args...]`** — runs the named task with the given arguments in a subshell. Use it inside a task's `main()` to invoke other tasks.
+- **`run::invoke <task> [args...]`** — runs the named task with the given arguments in a subshell. Use it inside a task's `main()` to invoke other tasks.
 
   ```sh
   main() {
-    run::run_task build -o /tmp/my_bin
+    run::invoke build -o /tmp/my_bin
     /tmp/my_bin
   }
   ```
 
-- **`run::depends_on <task>...`** — runs each named task in order (as `run::run_task <task>`), stopping and propagating the exit code at the first failure. Use it inside a task's `main()` to build tasks out of other tasks.
+- **`run::depends_on <task>...`** — runs each named task in order (as `run::invoke <task>`), stopping and propagating the exit code at the first failure. Use it inside a task's `main()` to build tasks out of other tasks.
 
   ```sh
   main() { run::depends_on build test; echo "deploying..."; }
