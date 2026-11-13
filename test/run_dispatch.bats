@@ -50,6 +50,13 @@ teardown() {
   [[ "$output" == *"install-global"* ]]
 }
 
+@test "no-arg listing shows built-in 'add-task' task" {
+  run ./run
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"Create a new task"* ]]
+  [[ "$output" == *"add-task"* ]]
+}
+
 @test "no-arg listing does not list .runrc as a task" {
   run ./run
   [ "$status" -eq 0 ]

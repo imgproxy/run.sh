@@ -389,15 +389,16 @@ run::_cmd_list() {
     printf '    description() { echo "One-line summary"; }\n'
     printf '    help() { echo "Usage: ./run <name> [args...]"; }\n'
     printf '    main() { echo "task logic goes here, receives \\"$@\\""; }\n\n'
-    printf '  Or download an example task:\n\n'
-    printf '    mkdir -p bin && curl -fsSL https://raw.githubusercontent.com/imgproxy/run.sh/main/examples/task.sh -o bin/example.sh\n\n'
+    printf '  Or run use the add-task command to create a new task:\n\n'
+    printf '    ./run add-task <name>\n\n'
     printf '  Optionally, create a .runrc file at the project root to define shared\n'
     printf '  functions and variables for your tasks.\n'
   fi
 
   printf "\nrun.sh commands:\n"
-  run::_print_cmd "install-global" "Add a global \`run\` shell function (arg: bash|zsh|fish)"
   run::_print_cmd "help" "Show a <task>'s help message"
+  run::_print_cmd "add-task" "Create a new task with the given name"
+  run::_print_cmd "install-global" "Add a global \`run\` shell function (arg: bash|zsh|fish)"
 }
 
 run::_cmd_help() {
@@ -518,7 +519,7 @@ function __run_tasks
 end
 complete -c run -f
 complete -c run -n '__fish_use_subcommand' -a '(__run_tasks)'
-complete -c run -n '__fish_use_subcommand' -a 'help install-global'
+complete -c run -n '__fish_use_subcommand' -a 'help install-global add-task'
 complete -c run -n '__fish_seen_subcommand_from help' -a '(__run_tasks)'
 complete -c run -n '__fish_seen_subcommand_from install-global' -a 'bash zsh fish --force'
 EOF
@@ -560,7 +561,7 @@ _run() {
   done
   for f in "$dir"/bin/*.sh(N); do tasks+=("${${f:t}%.sh}"); done
   case $CURRENT in
-    2) compadd -a tasks; compadd help install-global ;;
+    2) compadd -a tasks; compadd help install-global add-task ;;
     3) case "$words[2]" in
          help) compadd -a tasks ;;
          install-global) compadd bash zsh fish -- --force ;;
@@ -586,7 +587,7 @@ _run_complete() {
       [ -e "$f" ] || continue
       f="${f##*/}"; words+=("${f%.sh}")
     done
-    [ "$COMP_CWORD" -eq 1 ] && words+=(help install-global)
+    [ "$COMP_CWORD" -eq 1 ] && words+=(help install-global add-task)
   elif [ "$COMP_CWORD" -eq 2 ] && [ "${COMP_WORDS[1]}" = "install-global" ]; then
     words=(bash zsh fish --force)
   fi
@@ -605,10 +606,46 @@ EOF
   run::msg_info "next: run 'source $rc_file' (or open a new terminal), then 'run <task>' works from any subdirectory of a run.sh project"
 }
 
+run::_cmd_add_task() {
+  local task_name="${1:-}"
+  [ -z "$task_name" ] && { echo "Task name is required" >&2; return 1; }
+
+  local task_filename="$TASK_DIR/$task_name.sh"
+
+  if [ ! -e "$task_filename" ]; then
+    mkdir -p "$TASK_DIR"
+    cat > "$task_filename" <<TFEOF
+#!/usr/bin/env bash
+
+description() { echo "$task_name task description"; }
+
+help() {
+  cat <<EOF
+Usage: $task_name [options]
+EOF
+}
+
+main() {
+  echo "Running $task_name task"
+}
+
+TFEOF
+    run::msg_ok "Created new task: $task_filename"
+  else
+    run::msg_skip "Task already exists: $task_filename"
+  fi
+
+  local editor="${VISUAL:-${EDITOR:-vi}}"
+  if run::prompt cyan "Open the task with $editor for editing?" "Y/n" >/dev/null; then
+    "$editor" "$task_filename"
+  fi
+}
+
 case "${1:-}" in
   "") run::_cmd_list ;;
   install-global) shift; run::_cmd_install_global "$@" ;;
   help) shift; run::_cmd_help "$@" ;;
+  add-task) shift; run::_cmd_add_task "$@" ;;
   *)
     run::invoke "$@"
     ;;
