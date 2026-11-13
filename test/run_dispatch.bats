@@ -43,17 +43,11 @@ teardown() {
   [[ "$output" == *"help message"* ]]
 }
 
-@test "no-arg listing shows install-global hint only when no tasks exist" {
-  rm -f bin/greet.sh
+@test "no-arg listing shows built-in 'install-global' task" {
   run ./run
   [ "$status" -eq 0 ]
+  [[ "$output" == *"Add a global"* ]]
   [[ "$output" == *"install-global"* ]]
-}
-
-@test "no-arg listing hides install-global hint once a task exists" {
-  run ./run
-  [ "$status" -eq 0 ]
-  [[ "$output" != *"install-global"* ]]
 }
 
 @test "no-arg listing does not list .runrc as a task" {
