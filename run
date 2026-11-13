@@ -347,6 +347,17 @@ run::_header() {
   printf ' (v0.0.1)\n\n'
 }
 
+run::_print_cmd() {
+  local name="$1"
+  local desc="$2"
+  local col_width=22
+  printf '  '
+  run::color_echo green "$name"
+  local width=$((col_width - ${#name}))
+  [ $width -lt 1 ] && width=1
+  printf '%*s%s\n' $width " " "$desc"
+}
+
 run::_cmd_list() {
   run::_header
   local col_width=22
@@ -368,11 +379,8 @@ run::_cmd_list() {
     )"; then
       exit 1
     fi
-    printf '  '
-    run::color_echo green "$name"
-    local width=$((col_width - ${#name}))
-    [ $width -lt 1 ] && width=1
-    printf '%*s%s\n' $width " " "$desc"
+
+    run::_print_cmd "$name" "$desc"
   done
   if [ "$has_tasks" -eq 0 ]; then
     printf '  No tasks yet.\n\n'
@@ -384,17 +392,12 @@ run::_cmd_list() {
     printf '  Or download an example task:\n\n'
     printf '    mkdir -p bin && curl -fsSL https://raw.githubusercontent.com/imgproxy/run.sh/main/examples/task.sh -o bin/example.sh\n\n'
     printf '  Optionally, create a .runrc file at the project root to define shared\n'
-    printf '  functions and variables for your tasks.\n\n'
-    printf '  '
-    run::color_echo green "install-global"
-    # shellcheck disable=SC2016
-    printf '%*s%s\n' $((col_width - 14)) " " "Add a global \`run\` shell function (arg: bash|zsh|fish)"
-  else
-    printf '  '
-    run::color_echo green "help"
-    printf '%*s%s\n' $((col_width - 4)) " " "Show a <task>'s help message"
+    printf '  functions and variables for your tasks.\n'
   fi
-  printf '\n'
+
+  printf "\nrun.sh commands:\n"
+  run::_print_cmd "install-global" "Add a global \`run\` shell function (arg: bash|zsh|fish)"
+  run::_print_cmd "help" "Show a <task>'s help message"
 }
 
 run::_cmd_help() {
