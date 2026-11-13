@@ -113,6 +113,9 @@ main() {
   Its exit code becomes `./run`'s
   exit code.
 
+> [!TIP]
+> You can use the `./run add-task <name>` command to create a new task template and open it for editing.
+
 Task files are not executed in a subshell, so they have access to `PROJECT_ROOT`, `TASK_DIR`, `TASK_NAME`, every helper described below, and anything defined in `.runrc`.
 
 See `examples/task.sh` for a fuller example demonstrating flags, positional args, validation, and task composition patterns. Copy it into `bin/` and trim it down to what you need.
